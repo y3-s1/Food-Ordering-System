@@ -6,7 +6,7 @@ import cors from 'cors';
 
 import connectDB from './config/db';
 import errorHandler from './middleware/errorMiddleware';
-import restaurantRoutes from './routes/restaurantRoutes';
+
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/restaurant', restaurantRoutes);
+// app.use('/api/restaurant', restaurantRoutes);
 
 
 // Error Handling Middleware
