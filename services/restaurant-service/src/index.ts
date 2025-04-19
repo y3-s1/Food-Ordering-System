@@ -6,6 +6,8 @@ import cors from 'cors';
 
 import connectDB from './config/db';
 import errorHandler from './middleware/errorMiddleware';
+import restaurantRoutes from './routes/restaurantRoutes';
+// import menuItemRoutes from './routes/menuItemRoutes';
 
 
 dotenv.config();
@@ -13,11 +15,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5003;
 
+// middleware
 app.use(cors());
 app.use(express.json());
 
+
+
 // Routes
-// app.use('/api/restaurant', restaurantRoutes);
+app.use('/api/restaurants', restaurantRoutes);
+
 
 
 // Error Handling Middleware
