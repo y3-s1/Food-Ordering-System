@@ -20,6 +20,8 @@ export interface IOrder extends Document {
   };
   notes?: string;
   promotionCode?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const OrderSchema = new Schema<IOrder>({

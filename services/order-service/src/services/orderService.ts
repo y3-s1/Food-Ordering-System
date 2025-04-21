@@ -15,6 +15,12 @@ interface CreateOrderDTO {
 
 interface MenuItem { menuItemId: string; name: string; price: number }
 
+interface ModifyOrderDTO {
+  items?: { menuItemId: string; name: string; quantity: number; unitPrice: number }[];
+  notes?: string;
+  promotionCode?: string;
+}
+
 export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
   // 1) Validate & reserve items with Restaurant Service
   // await axios.post(
@@ -75,4 +81,103 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
   // });
 
   return order;
+}
+
+/**
+ * 2) Get an order by ID
+ */
+export async function getOrderById(orderId: string): Promise<IOrder> {
+  const order = await Order.findById(orderId).lean().exec();
+  if (!order) throw { status: 404, message: 'Order not found' };
+  return order as IOrder;
+}
+
+/**
+ * 3) Modify an existing order (only if still PendingPayment)
+ */
+export async function modifySelectOrder(
+  orderId: string,
+  dto: ModifyOrderDTO
+): Promise<IOrder> {
+  const order = await Order.findById(orderId);
+  if (!order) throw { status: 404, message: 'Order not found' };
+
+  if (order.status !== 'PendingPayment') {
+    throw { status: 400, message: 'Order cannot be modified at this stage' };
+  }
+
+  // Update items if provided
+  if (dto.items) {
+    // Optionally re-validate with Restaurant Service:
+    await axios.post(
+      `${process.env.RESTAURANT_URL}/validate-order`,
+      { restaurantId: order.restaurantId, items: dto.items },
+      { timeout: 2000 }
+    );
+
+    // Recalculate item totals
+    const enriched = dto.items.map(i => ({
+      menuItemId: i.menuItemId,
+      name:       i.name,
+      quantity:   i.quantity,
+      unitPrice:  i.unitPrice
+    }));
+  
+    // either overwrite the array...
+    order.items = enriched as any;   
+    // …or clear & push
+    order.items.splice(0, order.items.length, ...enriched as any);
+  }
+
+  // Update notes/promotion if provided
+  if (dto.notes !== undefined)       order.notes = dto.notes;
+  if (dto.promotionCode !== undefined) order.promotionCode = dto.promotionCode;
+
+  // Recompute totalPrice & fees
+  const itemsTotal = order.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const deliveryFee = order.fees.deliveryFee;  // or recalc if dynamic
+  const serviceFee  = order.fees.serviceFee;
+  const tax         = Math.round(itemsTotal * 0.05);
+  order.fees.tax    = tax;
+  order.totalPrice  = itemsTotal + deliveryFee + serviceFee + tax;
+
+  await order.save();
+
+  // If you’ve already requested payment before, you might republish:
+  // await publish('order.payment_requested', { orderId, amount: order.totalPrice, ... });
+
+  return order;
+}
+
+/**
+ * 4) Cancel an order (if not already too far)
+ */
+export async function cancelSelectOrder(orderId: string): Promise<void> {
+  const order = await Order.findById(orderId);
+  if (!order) throw { status: 404, message: 'Order not found' };
+
+  // Allow cancellation only up to 'Preparing'
+  const cancellableStatuses = ['PendingPayment','Confirmed','Preparing'];
+  if (!cancellableStatuses.includes(order.status)) {
+    throw { status: 400, message: 'Order cannot be cancelled at this stage' };
+  }
+
+  order.status = 'Cancelled';
+  await order.save();
+
+  // Notify other systems
+  // await publish('order.cancelled', { orderId });
+}
+
+/**
+ * 5) Get only status & last update (lightweight)
+ */
+export async function getOrderStatus(orderId: string) {
+  const order = await Order.findById(orderId).lean().exec();
+  if (!order) throw { status: 404, message: 'Order not found' };
+  return {
+    status: order.status,
+    updatedAt: order.updatedAt,
+    totalPrice: order.totalPrice
+  };
 }

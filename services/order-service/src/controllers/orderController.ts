@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { createOrder } from '../services/orderService';
+import { cancelSelectOrder, createOrder, getOrderById, getOrderStatus, modifySelectOrder } from '../services/orderService';
 
 export const placeOrder = async (
   req: Request,
@@ -19,7 +19,12 @@ export const getOrders = async (
     res: Response,
     next: NextFunction
   ) => {
-    res.json({ message: 'getOrders stub' });
+    try {
+      const order = await getOrderById(req.params.orderId);
+      res.json(order);
+    } catch (err) {
+      next(err);
+    }
   };
 
 export const getOrder = async (
@@ -27,7 +32,12 @@ export const getOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.json({ message: 'getOrder stub' });
+  try {
+    const order = await getOrderById(req.params.orderId);
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const modifyOrder = async (
@@ -35,7 +45,12 @@ export const modifyOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.json({ message: 'modifyOrder stub' });
+  try {
+    const order = await modifySelectOrder(req.params.orderId, req.body);
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const cancelOrder = async (
@@ -43,7 +58,12 @@ export const cancelOrder = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.json({ message: 'cancelOrder stub' });
+  try {
+    await cancelSelectOrder(req.params.orderId);
+    res.json({ message: 'Order cancelled' });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getStatus = async (
@@ -51,5 +71,10 @@ export const getStatus = async (
   res: Response,
   next: NextFunction
 ) => {
-  res.json({ message: 'getStatus stub' });
+  try {
+    const status = await getOrderStatus(req.params.orderId);
+    res.json(status);
+  } catch (err) {
+    next(err);
+  }
 };
