@@ -1,5 +1,4 @@
 import React from 'react';
-import foodygologo from '../../assets/foodygologo.png';
 
 const Footer: React.FC = () => {
     return (

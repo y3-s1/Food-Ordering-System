@@ -4,8 +4,9 @@ import './index.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import RootLayout from './layout/RootLayout.tsx';
 import Home from './pages/Home.tsx';
-import Restaurants from './pages/RestaurantList.tsx';
-import AddRestaurant from './pages/AddRestaurant.tsx';
+import RestaurantListPage from './pages/RestaurantList.tsx';
+import AddRestaurantPage from './pages/AddRestaurantPage.tsx';
+import RestaurantDetailPage from './pages/RestaurantDetailPage.tsx';
 
 
 const router = createBrowserRouter([
@@ -18,11 +19,15 @@ const router = createBrowserRouter([
       },
       {
         path: '/Restaurants',
-        element: <Restaurants />,
+        element: <RestaurantListPage />,
       },
       {
         path: '/add-restaurant',
-        element: <AddRestaurant />,
+        element: <AddRestaurantPage />,
+      },
+      {
+        path: '/Restaurants/:restaurantId',
+        element: <RestaurantDetailPage />,
       },
       // {
       //   path: '/about',
