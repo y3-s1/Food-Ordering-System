@@ -4,7 +4,8 @@ import './index.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import RootLayout from './layout/RootLayout.tsx';
 import Home from './pages/Home.tsx';
-
+import Restaurants from './pages/RestaurantList.tsx';
+import AddRestaurant from './pages/AddRestaurant.tsx';
 
 
 const router = createBrowserRouter([
@@ -14,6 +15,14 @@ const router = createBrowserRouter([
       {
         path: '/',
         element: <Home />,
+      },
+      {
+        path: '/Restaurants',
+        element: <Restaurants />,
+      },
+      {
+        path: '/add-restaurant',
+        element: <AddRestaurant />,
       },
       // {
       //   path: '/about',
