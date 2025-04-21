@@ -1,11 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
+import { createOrder } from '../services/orderService';
 
 export const placeOrder = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  res.status(201).json({ message: 'placeOrder stub' });
+  try {
+    const order = await createOrder(req.body);
+    res.status(201).json(order);
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getOrders = async (
