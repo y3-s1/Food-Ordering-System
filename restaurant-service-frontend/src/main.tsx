@@ -7,6 +7,7 @@ import Home from './pages/Home.tsx';
 import RestaurantListPage from './pages/RestaurantList.tsx';
 import AddRestaurantPage from './pages/AddRestaurantPage.tsx';
 import RestaurantDetailPage from './pages/RestaurantDetailPage.tsx';
+import RestaurantAdminRequestPage from './pages/RestaurantAdminRequestPage.tsx';
 
 
 const router = createBrowserRouter([
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: '/Restaurants/:restaurantId',
         element: <RestaurantDetailPage />,
+      },
+      {
+        path: '/admin/restaurant-requests',
+        element: <RestaurantAdminRequestPage />,
       },
       // {
       //   path: '/about',

@@ -1,14 +1,25 @@
-// src/components/restaurant/RestaurantCard.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Restaurant } from '../../types/types';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
+  showApprovalStatus?: boolean;
 }
 
-const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
+const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, showApprovalStatus = false }) => {
   const navigate = useNavigate();
+  
+  const getApprovalBadgeColor = () => {
+    switch (restaurant.approvalStatus) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
+  };
   
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
@@ -24,12 +35,18 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
             <span className="text-gray-400 text-lg">No Image</span>
           </div>
         )}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
             restaurant.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
             {restaurant.isAvailable ? 'Open' : 'Closed'}
           </span>
+          
+          {showApprovalStatus && (
+            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getApprovalBadgeColor()}`}>
+              {restaurant.approvalStatus.charAt(0).toUpperCase() + restaurant.approvalStatus.slice(1)}
+            </span>
+          )}
         </div>
       </div>
       

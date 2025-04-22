@@ -1,4 +1,3 @@
-// src/api/restaurantApi.ts
 import axios from 'axios';
 import { Restaurant, MenuItem } from '../types/types';
 
@@ -10,12 +9,22 @@ export const fetchAllRestaurants = async (): Promise<Restaurant[]> => {
   return response.data;
 };
 
+export const fetchApprovedRestaurants = async (): Promise<Restaurant[]> => {
+  const response = await axios.get(`${API_URL}/restaurants/approved`);
+  return response.data;
+};
+
+export const fetchPendingRestaurants = async (): Promise<Restaurant[]> => {
+  const response = await axios.get(`${API_URL}/restaurants/pending`);
+  return response.data;
+};
+
 export const fetchRestaurantById = async (id: string): Promise<Restaurant> => {
   const response = await axios.get(`${API_URL}/restaurants/${id}`);
   return response.data;
 };
 
-export const createRestaurant = async (restaurantData: Omit<Restaurant, '_id' | 'createdAt' | 'updatedAt'>): Promise<Restaurant> => {
+export const createRestaurant = async (restaurantData: Omit<Restaurant, '_id' | 'createdAt' | 'updatedAt' | 'approvalStatus'>): Promise<Restaurant> => {
   const response = await axios.post(`${API_URL}/restaurants`, restaurantData);
   return response.data;
 };
@@ -31,6 +40,16 @@ export const deleteRestaurant = async (id: string): Promise<void> => {
 
 export const toggleRestaurantAvailability = async (id: string): Promise<{isAvailable: boolean}> => {
   const response = await axios.patch(`${API_URL}/restaurants/${id}/toggle-availability`);
+  return response.data;
+};
+
+export const approveRestaurant = async (id: string): Promise<Restaurant> => {
+  const response = await axios.patch(`${API_URL}/restaurants/${id}/approve`);
+  return response.data;
+};
+
+export const rejectRestaurant = async (id: string): Promise<Restaurant> => {
+  const response = await axios.patch(`${API_URL}/restaurants/${id}/reject`);
   return response.data;
 };
 

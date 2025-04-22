@@ -1,7 +1,6 @@
-// src/pages/RestaurantListPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchAllRestaurants } from '../api/restaurantApi';
+import { fetchApprovedRestaurants } from '../api/restaurantApi';
 import { Restaurant } from '../types/types';
 import RestaurantCard from '../components/restaurant/RestaurantCard';
 
@@ -17,7 +16,8 @@ const RestaurantListPage: React.FC = () => {
     const loadRestaurants = async () => {
       try {
         setLoading(true);
-        const data = await fetchAllRestaurants();
+        // Only fetch approved restaurants for public display
+        const data = await fetchApprovedRestaurants();
         setRestaurants(data);
         setFilteredRestaurants(data);
       } catch (err) {
@@ -79,12 +79,12 @@ const RestaurantListPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">All Restaurants</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Restaurants</h1>
         <Link
           to="/add-restaurant"
           className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors duration-300"
         >
-          Add Restaurant
+          Register Restaurant
         </Link>
       </div>
       

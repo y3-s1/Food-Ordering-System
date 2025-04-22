@@ -25,4 +25,5 @@ router.put('/:restaurantId/menu-items/:itemId', menuItemController.updateMenuIte
 router.delete('/:restaurantId/menu-items/:itemId', menuItemController.deleteMenuItem);
 router.patch('/:restaurantId/menu-items/:itemId/toggle-availability', menuItemController.toggleItemAvailability);
 
+
 export default router;
