@@ -13,8 +13,8 @@ logs/
 *.log
 
 # === Environment Variables ===
-.env
-.env.*
+# .env
+# .env.*
 
 # === OS Specific ===
 .DS_Store
