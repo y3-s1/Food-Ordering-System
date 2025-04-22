@@ -26,14 +26,38 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Create new restaurant
+
+
+// Get approved restaurants only (for customer view)
+export const getApprovedRestaurants = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurants = await Restaurant.find({ approvalStatus: 'approved' });
+    res.status(200).json(restaurants);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching approved restaurants', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+
+
+
+// Update create method to ensure new registrations are pending
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const newRestaurant = new Restaurant(req.body);
+    const newRestaurant = new Restaurant({
+      ...req.body,
+      approvalStatus: 'pending' // Ensure all new registrations are pending
+    });
     const savedRestaurant = await newRestaurant.save();
     res.status(201).json(savedRestaurant);
   } catch (error) {
-    res.status(400).json({ message: 'Error creating restaurant', error });
+    res.status(400).json({ 
+      message: 'Error creating restaurant', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
 };
 
@@ -87,5 +111,84 @@ export const toggleAvailability = async (req: Request, res: Response): Promise<v
     });
   } catch (error) {
     res.status(500).json({ message: 'Error toggling restaurant availability', error });
+  }
+};
+
+
+
+// Get all pending restaurant registrations (for admin)
+export const getPendingRestaurants = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const pendingRestaurants = await Restaurant.find({ approvalStatus: 'pending' });
+    res.status(200).json(pendingRestaurants);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching pending restaurants', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+// Approve restaurant registration
+export const approveRestaurant = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+    
+    if (restaurant.approvalStatus !== 'pending') {
+      res.status(400).json({ 
+        message: 'Restaurant is not in pending status', 
+        currentStatus: restaurant.approvalStatus 
+      });
+      return;
+    }
+    
+    restaurant.approvalStatus = 'approved';
+    await restaurant.save();
+    
+    res.status(200).json({ 
+      message: 'Restaurant registration approved successfully',
+      restaurant 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error approving restaurant', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+// Reject restaurant registration
+export const rejectRestaurant = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.id);
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+    
+    if (restaurant.approvalStatus !== 'pending') {
+      res.status(400).json({ 
+        message: 'Restaurant is not in pending status', 
+        currentStatus: restaurant.approvalStatus 
+      });
+      return;
+    }
+    
+    restaurant.approvalStatus = 'rejected';
+    await restaurant.save();
+    
+    res.status(200).json({ 
+      message: 'Restaurant registration rejected',
+      restaurant 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error rejecting restaurant', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
   }
 };

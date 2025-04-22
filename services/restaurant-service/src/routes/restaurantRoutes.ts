@@ -7,13 +7,17 @@ const router = express.Router();
 
 // Restaurant routes
 router.get('/', restaurantController.getAllRestaurants);
+router.get('/approved', restaurantController.getApprovedRestaurants);
+router.get('/pending', restaurantController.getPendingRestaurants);
 router.get('/:id', restaurantController.getRestaurantById);
 router.post('/', restaurantController.createRestaurant);
 router.put('/:id', restaurantController.updateRestaurant);
 router.delete('/:id', restaurantController.deleteRestaurant);
 router.patch('/:id/toggle-availability', restaurantController.toggleAvailability);
+router.patch('/:id/approve', restaurantController.approveRestaurant);
+router.patch('/:id/reject', restaurantController.rejectRestaurant);
 
-// Menu items routes (nested under restaurants)
+// Menu items routes remain unchanged
 router.get('/:restaurantId/menu-items', menuItemController.getMenuItems);
 router.post('/:restaurantId/menu-items', menuItemController.createMenuItem);
 router.get('/:restaurantId/menu-items/:itemId', menuItemController.getMenuItemById);

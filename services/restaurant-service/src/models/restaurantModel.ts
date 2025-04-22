@@ -11,6 +11,7 @@ export interface IRestaurant extends Document {
   openingHours: string;
   isAvailable: boolean;
   imageUrl: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,11 @@ const RestaurantSchema: Schema = new Schema(
     openingHours: { type: String, required: true },
     isAvailable: { type: Boolean, default: true },
     imageUrl: { type: String, default: '' },
+    approvalStatus: { 
+      type: String, 
+      enum: ['pending', 'approved', 'rejected'], 
+      default: 'pending' 
+    },
   },
   { timestamps: true }
 );
