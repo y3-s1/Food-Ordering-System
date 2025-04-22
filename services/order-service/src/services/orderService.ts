@@ -83,6 +83,12 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
   return order;
 }
 
+export async function getAllOrders(): Promise<IOrder[]> {
+  const orders = await Order.find().lean().exec();
+  if (!orders) throw { status: 404, message: 'Orders not found' };
+  return orders as IOrder[];
+}
+
 /**
  * 2) Get an order by ID
  */
@@ -109,11 +115,12 @@ export async function modifySelectOrder(
   // Update items if provided
   if (dto.items) {
     // Optionally re-validate with Restaurant Service:
-    await axios.post(
-      `${process.env.RESTAURANT_URL}/validate-order`,
-      { restaurantId: order.restaurantId, items: dto.items },
-      { timeout: 2000 }
-    );
+    //##########################################################################################
+    // await axios.post(
+    //   `${process.env.RESTAURANT_URL}/validate-order`,
+    //   { restaurantId: order.restaurantId, items: dto.items },
+    //   { timeout: 2000 }
+    // );
 
     // Recalculate item totals
     const enriched = dto.items.map(i => ({

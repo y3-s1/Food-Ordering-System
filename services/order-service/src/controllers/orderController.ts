@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { cancelSelectOrder, createOrder, getOrderById, getOrderStatus, modifySelectOrder } from '../services/orderService';
+import { cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder } from '../services/orderService';
 
 export const placeOrder = async (
   req: Request,
@@ -20,7 +20,7 @@ export const getOrders = async (
     next: NextFunction
   ) => {
     try {
-      const order = await getOrderById(req.params.orderId);
+      const order = await getAllOrders();
       res.json(order);
     } catch (err) {
       next(err);
