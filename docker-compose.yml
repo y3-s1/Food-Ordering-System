@@ -51,15 +51,15 @@ services:
   #   depends_on:
   #     - mongo
 
-  # user-service:
-  #   build: ./services/user-service
-  #   container_name: user-service
-  #   ports:
-  #     - "5004:5004"
-  #   env_file:
-  #     - ./services/user-service/.env
-  #   depends_on:
-  #     - mongo
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+    ports:
+      - "5004:5004"
+    env_file:
+      - ./services/user-service/.env
+    depends_on:
+      - mongo
 
   # client:
   #   build: ./client
