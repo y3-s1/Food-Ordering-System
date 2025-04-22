@@ -15,21 +15,21 @@ services:
       - "8080:8080"
     env_file:
       - ./api-gateway/.env
-    # depends_on:
-      # - delivery-service
+    depends_on:
+      - delivery-service
       # - order-service
       # - restaurant-service
       # - user-service
 
-  # delivery-service:
-  #   build: ./services/delivery-service
-  #   container_name: delivery-service
-  #   ports:
-  #     - "5003:5003"
-  #   env_file:
-  #     - ./services/delivery-service/.env
-  #   depends_on:
-  #     - mongo
+  delivery-service:
+    build: ./services/delivery-service
+    container_name: delivery-service
+    ports:
+      - "5003:5003"
+    env_file:
+      - ./services/delivery-service/.env
+    depends_on:
+      - mongo
 
   # order-service:
   #   build: ./services/order-service
