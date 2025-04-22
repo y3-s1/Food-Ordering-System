@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white rounded-lg shadow-sm dark:bg-gray-900 m-2">
+    <nav className="bg-white shadow-sm dark:bg-gray-900 ">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
           <img src="/api/placeholder/32/32" className="h-8" alt="Logo" />
