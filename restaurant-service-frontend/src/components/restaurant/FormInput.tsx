@@ -1,4 +1,4 @@
-// src/components/shared/FormInput.tsx
+// src/components/restaurant/FormInput.tsx
 import React from 'react';
 
 interface FormInputProps {

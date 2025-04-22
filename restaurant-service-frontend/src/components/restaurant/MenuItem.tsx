@@ -1,4 +1,4 @@
-// src/components/shared/MenuItem.tsx
+// src/components/restaurant/MenuItem.tsx
 import React from 'react';
 import { MenuItem as MenuItemType } from '../../types/types';
 
