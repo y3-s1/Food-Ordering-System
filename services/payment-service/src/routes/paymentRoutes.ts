@@ -4,10 +4,14 @@ import bodyParser from 'body-parser';
 
 const router = express.Router();
 
-// Route: create payment intent
-router.post('/create-intent', express.json(), createPaymentIntent);
+// Normal routes
+router.post('/create-intent', createPaymentIntent);
 
-// Route: handle Stripe webhook
-router.post('/webhook', bodyParser.raw({ type: 'application/json' }), handleWebhook);
+// Stripe webhook route (needs raw body)
+router.post(
+  '/webhook',
+  bodyParser.raw({ type: 'application/json' }),
+  handleWebhook
+);
 
 export default router;

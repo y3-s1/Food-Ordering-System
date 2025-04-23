@@ -8,7 +8,7 @@ import bodyParser from 'body-parser';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5005;
 
 // For normal routes
 app.use('/api/payments', express.json());
