@@ -1,6 +1,7 @@
 import { Schema, Document } from 'mongoose';
 
 export interface ICartItem extends Document {
+  restaurantId: string;
   menuItemId: string;
   name: string;
   quantity: number;
@@ -9,6 +10,7 @@ export interface ICartItem extends Document {
 }
 
 export const CartItemSchema = new Schema<ICartItem>({
+  restaurantId: { type: String, required: true },
   menuItemId: { type: String, required: true },
   name:       { type: String, required: true },
   quantity:   { type: Number, required: true, min: 1 },
