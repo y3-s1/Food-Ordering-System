@@ -7,7 +7,7 @@ import { sendOtpEmail, sendConfirmationEmail } from '../services/emailService';
 import crypto from 'crypto';
 
 // Define a type for token generation that matches the expected input
-interface TokenPayload {
+export interface TokenPayload {
   _id: string;
   email: string;
   isAdmin: boolean;
