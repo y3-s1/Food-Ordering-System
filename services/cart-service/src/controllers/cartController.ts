@@ -37,3 +37,46 @@ export const addItem = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
+export const updateItem = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, cartId } = getContext(req);
+    const itemId = req.params.itemId;
+    const data = req.body;
+    const cart = await cartService.updateItem(userId, cartId, itemId, data);
+    res.json(cart);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const removeItem = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, cartId } = getContext(req);
+    const itemId = req.params.itemId;
+    const cart = await cartService.removeItem(userId, cartId, itemId);
+    res.json(cart);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const clearCart = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, cartId } = getContext(req);
+    const cart = await cartService.clearCart(userId, cartId);
+    res.json(cart);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const generateDraft = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, cartId } = getContext(req);
+    // if (!userId) throw { status: 401, message: 'User must be authenticated to checkout' };
+    const draft = await cartService.generateDraft('test-user-id', cartId);
+    res.json(draft);
+  } catch (err) {
+    next(err);
+  }
+};

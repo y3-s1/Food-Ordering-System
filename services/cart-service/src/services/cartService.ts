@@ -100,3 +100,85 @@ export async function addItem(
   return cart;
 }
 
+// 4) Update item
+export async function updateItem(
+  userId: string | undefined,
+  cartIdHeader: string | undefined,
+  itemId: string,
+  data: { quantity?: number; notes?: string }
+): Promise<ICart> {
+  const cart = await findOrCreateCart(userId, cartIdHeader);
+  const item = cart.items.id(itemId);
+  if (!item) throw { status: 404, message: 'Item not found in cart' };
+
+  if (data.quantity !== undefined) {
+    if (data.quantity < 1) {
+      // remove
+      cart.items = cart.items.filter(i => i._id?.toString() !== itemId);
+    } else if (data.quantity > MAX_QTY_PER_ITEM) {
+      throw { status: 400, message: `Max quantity per item is ${MAX_QTY_PER_ITEM}` };
+    } else {
+      item.quantity = data.quantity;
+    }
+  }
+  if (data.notes !== undefined) item.notes = data.notes;
+
+  recalcCart(cart);
+  await cart.save();
+  return cart;
+}
+
+// 5) Remove item
+export async function removeItem(
+  userId: string | undefined,
+  cartIdHeader: string | undefined,
+  itemId: string
+): Promise<ICart> {
+  const cart = await findOrCreateCart(userId, cartIdHeader);
+  const item = cart.items.id(itemId);
+  if (!item) throw { status: 404, message: 'Item not found in cart' };
+  cart.items = cart.items.filter(i => i._id?.toString() !== itemId);
+  recalcCart(cart);
+  await cart.save();
+  return cart;
+}
+
+// // 6) Clear cart
+export async function clearCart(
+  userId: string | undefined,
+  cartIdHeader: string | undefined
+): Promise<ICart> {
+  const cart = await findOrCreateCart(userId, cartIdHeader);
+  cart.items = [];
+  cart.promotionCode = undefined;
+  cart.discountAmount = 0;
+  recalcCart(cart);
+  await cart.save();
+  return cart;
+}
+
+// // 7) Generate Order Draft and publish
+export async function generateDraft(
+  userId: string,
+  cartIdHeader: string | undefined
+): Promise<any> {
+  const cart = await findOrCreateCart(userId, cartIdHeader);
+  if (!cart.items.length) throw { status: 400, message: 'Cart is empty' };
+
+  const draft = {
+    customerId: userId,
+    restaurantId: cart.items[0]._doc.restaurantId,
+    items: cart.items.map(i => ({
+      menuItemId: i.menuItemId,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      notes: i.notes
+    })),
+    promotionCode: cart.promotionCode,
+    fees: cart.fees,
+    totalPrice: cart.total
+  };
+
+//   await publish('cart.ready_for_order', draft);
+  return draft;
+}
