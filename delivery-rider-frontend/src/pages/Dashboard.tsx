@@ -1,32 +1,31 @@
-import { useState, useEffect } from 'react';
-
-interface Delivery {
-  _id: string;
-  deliveryAddress: string;
-  status: 'PENDING' | 'ASSIGNED' | 'OUT_FOR_DELIVERY' | 'DELIVERED';
-  estimatedTime: string;
-}
+import { useEffect, useState } from 'react';
+import { Delivery } from '../types/delivery';
+import { getDeliveriesByDriver } from '../api/delivery';
 
 const Dashboard = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const driverId = '6604e71234567890abcdefa4'; // Temp
 
   useEffect(() => {
-    // Mock data for now
-    setDeliveries([
-      {
-        _id: 'd001',
-        deliveryAddress: '123 Main Street, Colombo',
-        status: 'ASSIGNED',
-        estimatedTime: '2025-04-25T15:00:00Z',
-      },
-      {
-        _id: 'd002',
-        deliveryAddress: '456 Galle Road, Moratuwa',
-        status: 'OUT_FOR_DELIVERY',
-        estimatedTime: '2025-04-25T16:30:00Z',
-      },
-    ]);
+    const fetchData = async () => {
+      try {
+        const data = await getDeliveriesByDriver(driverId);
+        setDeliveries(data);
+      } catch (error) {
+        console.error('Failed to fetch deliveries', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  if (loading) {
+    return <p className="text-center mt-10">Loading deliveries...</p>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -60,18 +59,6 @@ const Dashboard = () => {
             <p className="text-gray-500 mt-1 text-sm">
               ETA: {new Date(delivery.estimatedTime).toLocaleTimeString()}
             </p>
-            <div className="mt-3 flex gap-2">
-              {delivery.status !== 'DELIVERED' && (
-                <button className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition">
-                  Mark Delivered
-                </button>
-              )}
-              {delivery.status === 'ASSIGNED' && (
-                <button className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition">
-                  Start Delivery
-                </button>
-              )}
-            </div>
           </div>
         ))}
       </div>
