@@ -133,3 +133,20 @@ export const updateDriverLocation: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Failed to update driver location', error: err });
   }
 };
+
+// 8. Get all deliveries assigned to a specific driver
+export const getDeliveriesByDriver: RequestHandler = async (req, res) => {
+  try {
+    const { driverId } = req.query;
+
+    if (!driverId) {
+      res.status(400).json({ message: 'Missing driverId parameter' });
+      return;
+    }
+
+    const deliveries = await Delivery.find({ driverId });
+    res.json(deliveries);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch deliveries by driver', error: err });
+  }
+};
