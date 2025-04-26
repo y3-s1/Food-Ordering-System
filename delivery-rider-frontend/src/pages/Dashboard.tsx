@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useRef } from 'react';
 import { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
+import { calculateDistance } from '../utils/geo';
 
 
 const Dashboard = () => {
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [activeDelivery, setActiveDelivery] = useState<Delivery | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(15);
+  const [distanceToDelivery, setDistanceToDelivery] = useState<number | null>(null);
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
 
@@ -111,6 +113,22 @@ const Dashboard = () => {
       );
     }
   }, [zoomLevel, currentPosition]);
+
+
+  useEffect(() => {
+    if (currentPosition && activeDelivery?.location) {
+      const distance = calculateDistance(
+        currentPosition.lat,
+        currentPosition.lng,
+        activeDelivery.location.lat,
+        activeDelivery.location.lng
+      );
+      setDistanceToDelivery(distance);
+    } else {
+      setDistanceToDelivery(null);
+    }
+  }, [currentPosition, activeDelivery]);
+  
   
 
 
@@ -129,7 +147,7 @@ const Dashboard = () => {
   
       toast.success(
         newStatus === 'DELIVERED'
-          ? '✅ Marked as Delivered!'
+          ? 'Delivered successfully!'
           : '🚚 Marked as Out for Delivery',
         { id: toastId }
       );
@@ -193,6 +211,12 @@ const Dashboard = () => {
               </Marker>
             )}
           </MapContainer>
+        </div>
+      )}
+
+      {distanceToDelivery !== null && (
+        <div className="text-center text-gray-700 mb-4">
+          📏 Distance to Delivery: <b>{distanceToDelivery.toFixed(2)} km</b>
         </div>
       )}
 
