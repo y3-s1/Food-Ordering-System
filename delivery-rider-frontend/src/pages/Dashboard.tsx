@@ -129,7 +129,7 @@ const Dashboard = () => {
       </div>
         {confirmModal.visible && (
           <div className="fixed inset-0 backdrop-blur-xs bg-black/10 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-md w-80">
+            <div className="bg-white p-6 rounded-lg shadow-md w-80 animate-fadeIn">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Confirm Delivery
               </h3>
