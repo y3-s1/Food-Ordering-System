@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Delivery } from '../types/delivery';
-import { getDeliveriesByDriver } from '../api/delivery';
+import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
 
 const Dashboard = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -22,6 +22,20 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  const handleStatusUpdate = async (id: string, newStatus: string) => {
+    try {
+      const updatedDelivery = await updateDeliveryStatus(id, newStatus);
+      setDeliveries((prevDeliveries) =>
+        prevDeliveries.map((delivery) =>
+          delivery._id === id ? updatedDelivery : delivery
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update status', error);
+    }
+  };
+  
 
   if (loading) {
     return <p className="text-center mt-10">Loading deliveries...</p>;
@@ -59,6 +73,25 @@ const Dashboard = () => {
             <p className="text-gray-500 mt-1 text-sm">
               ETA: {new Date(delivery.estimatedTime).toLocaleTimeString()}
             </p>
+          
+            <div className="mt-3 flex gap-2">
+              {delivery.status === 'ASSIGNED' && (
+                <button
+                  onClick={() => handleStatusUpdate(delivery._id, 'OUT_FOR_DELIVERY')}
+                  className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
+                >
+                  Start Delivery
+                </button>
+              )}
+              {delivery.status === 'OUT_FOR_DELIVERY' && (
+                <button
+                  onClick={() => handleStatusUpdate(delivery._id, 'DELIVERED')}
+                  className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition"
+                >
+                  Mark Delivered
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

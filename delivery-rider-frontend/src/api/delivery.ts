@@ -7,3 +7,8 @@ export const getDeliveriesByDriver = async (driverId: string): Promise<Delivery[
   });
   return res.data;
 };
+
+export const updateDeliveryStatus = async (deliveryId: string, status: string): Promise<Delivery> => {
+  const res = await api.put(`/deliveries/${deliveryId}/status`, { status });
+  return res.data;
+};
