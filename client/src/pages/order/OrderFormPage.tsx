@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { placeOrder } from '../../services/order/orderService';
 import type { CreateOrderDTO, OrderItemDTO } from '../../types/order/order';
@@ -7,22 +7,61 @@ import { OrderDraft } from '../../types/cart/cart';
 export function OrderFormPage() {
   const navigate = useNavigate();
   const { state: draft } = useLocation() as { state: OrderDraft };
+  const [isCartOpen, setIsCartOpen] = useState(true);
+  const [deliveryOption, setDeliveryOption] = useState< 'Standard' | 'PickUp'>('Standard');
+  // const [deliveryOption, setDeliveryOption] = useState<'Priority' | 'Standard' | 'Schedule'>('Standard');
 
   const [form, setForm] = useState<CreateOrderDTO>({
-    customerId:   draft?.customerId || '',
-    restaurantId: draft?.restaurantId || '',
-    items:        draft
-      ? draft.items.map(i => ({ menuItemId: i.menuItemId, name: '', quantity: i.quantity, unitPrice: i.unitPrice }))
-      : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
-    deliveryAddress: { street: '', city: '', postalCode: '', country: '' },
-    notes:        '',
-    promotionCode: draft?.promotionCode || '',
+    customerId: draft?.customerId || '',
+  customerName: draft?.customerName || '',
+  customerPhone: draft?.customerPhone || '',
+  restaurantId: draft?.restaurantId || '',
+  items: draft
+    ? draft.items.map(i => ({
+        menuItemId: i.menuItemId,
+        name: '', // Optionally fill if name is available in draft
+        quantity: i.quantity,
+        unitPrice: i.unitPrice
+      }))
+    : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
+  deliveryAddress: {
+    street: '',
+    city: '',
+    postalCode: '',
+    country: ''
+  },
+  notes: '',
+  promotionCode: draft?.promotionCode || '',
+  fees: {
+    deliveryFee: draft?.fees?.deliveryFee || 0,
+    serviceFee: draft?.fees?.serviceFee || 0,
+    tax: draft?.fees?.tax || 0
+  },
+  totalPrice: draft?.totalPrice || 0
   });
 
-  function updateField<K extends keyof CreateOrderDTO>(
-    key: K,
-    value: CreateOrderDTO[K]
-  ) {
+  // inside your component, before the return
+  const subtotal = form.items.reduce(
+    (sum, itm) => sum + itm.unitPrice * itm.quantity,
+    0
+  );
+
+  // if you ever have a discount, calculate it here:
+  const discountAmount = 0; // or pull from form or promo response
+
+  const { deliveryFee, serviceFee, tax } = form.fees ?? {
+    deliveryFee: 0,
+    serviceFee: 0,
+    tax: 0,
+  };
+
+  const feesTotal = deliveryFee + serviceFee + tax;
+
+  // you said your DTO also has totalPrice, but you could also do:
+  const total = subtotal - discountAmount + feesTotal;
+
+
+  function updateField<K extends keyof CreateOrderDTO>(key: K, value: CreateOrderDTO[K]) {
     setForm(f => ({ ...f, [key]: value }));
   }
 
@@ -43,166 +82,317 @@ export function OrderFormPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    try {
-      const res = await placeOrder(form);
-      navigate(`/order/confirm/${res.data._id}`);
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await placeOrder(form);
+    navigate(`/order/confirm/${res.data._id}`);
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-6">Place a New Order</h1>
-      <form onSubmit={onSubmit} className="space-y-6">
-        {/* Restaurant & Customer IDs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Customer ID"
-            value={form.customerId}
-            onChange={e => updateField('customerId', e.target.value)}
-            className="w-full border rounded-lg p-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Restaurant ID"
-            value={form.restaurantId}
-            onChange={e => updateField('restaurantId', e.target.value)}
-            className="w-full border rounded-lg p-2"
-            required
-          />
-        </div>
+    <div className="max-w-5xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* LEFT COLUMN */}
+      <div className="space-y-6">
+        {/* Customer Details Card */}
+        <section className="bg-white rounded-2xl p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Customer details</h2>
 
-        {/* Items */}
-        {form.items.map((item, i) => (
-          <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Menu Item ID"
-              value={item.menuItemId}
-              onChange={e => updateItem(i, { menuItemId: e.target.value })}
-              className="border rounded-lg p-2"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Name"
-              value={item.name}
-              onChange={e => updateItem(i, { name: e.target.value })}
-              className="border rounded-lg p-2"
-              required
-            />
-            <input
-              type="number"
-              min={1}
-              placeholder="Qty"
-              value={item.quantity}
-              onChange={e => updateItem(i, { quantity: +e.target.value })}
-              className="border rounded-lg p-2"
-              required
-            />
-            <input
-              type="number"
-              min={0}
-              placeholder="Unit Price"
-              value={item.unitPrice}
-              onChange={e => updateItem(i, { unitPrice: +e.target.value })}
-              className="border rounded-lg p-2"
-              required
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              {/* person icon */}
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M5.121 17.804A13.937 13.937 0 0112 15c2.21 0 4.31.57 6.121 1.804M15 11a3 3 0 11-6 0
+                    3 3 0 016 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Full name"
+                value={form.customerName}
+                onChange={e => updateField('customerName', e.target.value)}
+                className="flex-1 border rounded-lg p-2 w-full"
+                required
+              />
+            </div>
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={addItem}
-          className="text-sm text-blue-600 hover:underline"
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {/* phone icon */}
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 5a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414
+                    2.414a1 1 0 00.707.293H15a2 2 0 012 2v2.586a1
+                    1 0 01-.293.707l-2.414 2.414a1 1 0 00-.293.707V17a2
+                    2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+              </svg>
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={form.customerPhone}
+                onChange={e => updateField('customerPhone', e.target.value)}
+                className="flex-1 border rounded-lg p-2 w-full"
+                required
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Delivery Details Card */}
+        <section className="bg-white rounded-2xl p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Delivery details</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9-4 9 4v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" /></svg>
+              <div>
+                <p className="font-medium">{form.deliveryAddress.street || 'Select address'}</p>
+                <p className="text-sm text-gray-500">{form.deliveryAddress.city}</p>
+              </div>
+            </div>
+            <button className="text-blue-600 hover:underline">Edit</button>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              <p className="text-gray-700">{form.notes || 'Add delivery instructions'}</p>
+            </div>
+            <button className="text-blue-600 hover:underline">Edit</button>
+          </div>
+        </section>
+
+        {/* Delivery Options Card */}
+        <section className="bg-white rounded-2xl p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Delivery options</h2>
+          <div className="space-y-3">
+            {([ 'Standard', 'PickUp'] as const).map(opt => {
+              const isSelected = deliveryOption === opt;
+              return (
+                <label
+                  key={opt}
+                  className={`
+                    flex items-center p-4 rounded-lg cursor-pointer 
+                    border ${isSelected ? 'border-black' : 'border-gray-200'}
+                    hover:shadow
+                  `}
+                >
+                  <input
+                    type="radio"
+                    name="deliveryOption"
+                    value={opt}
+                    checked={isSelected}
+                    onChange={() => setDeliveryOption(opt)}
+                    className="mr-3"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium">{opt}</p>
+                      {/* {opt === 'Priority' && (
+                        <span className="text-xs bg-green-100 text-green-800 py-0.5 px-2 rounded-full">
+                          Faster
+                        </span>
+                      )} */}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {/* {opt === 'Priority' && '10-25 min · Delivered directly to you'} */}
+                      {opt === 'Standard' && '15-30 min'}
+                      {/* {opt === 'Schedule' && 'Choose a time'} */}
+                    </p>
+                  </div>
+                  {/* {opt !== 'Schedule' && (
+                    <span className="text-gray-700">
+                      +LKR {opt === 'Priority' ? 129 : 0}
+                    </span>
+                  )} */}
+                </label>
+              );
+            })}
+          </div>
+        </section>
+
+
+        {/* Payment Card */}
+        {/* <section className="bg-white rounded-2xl p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Payment</h2>
+          <button className="w-full flex items-center justify-center space-x-2 border border-dashed border-gray-300 rounded-lg p-4 hover:bg-gray-50">
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18" /></svg>
+            <span className="font-medium text-gray-700">Add payment method</span>
+          </button>
+        </section> */}
+
+        {/* Continue Button */}
+        <button 
+          onClick={onSubmit}
+          className="hidden lg:block w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
         >
-          + Add another item
+          Continue to payment
         </button>
+      </div>
 
-        {/* Delivery Address */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Street"
-            value={form.deliveryAddress.street}
-            onChange={e =>
-              updateField('deliveryAddress', {
-                ...form.deliveryAddress,
-                street: e.target.value,
-              })
-            }
-            className="w-full border rounded-lg p-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="City"
-            value={form.deliveryAddress.city}
-            onChange={e =>
-              updateField('deliveryAddress', {
-                ...form.deliveryAddress,
-                city: e.target.value,
-              })
-            }
-            className="w-full border rounded-lg p-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Postal Code"
-            value={form.deliveryAddress.postalCode}
-            onChange={e =>
-              updateField('deliveryAddress', {
-                ...form.deliveryAddress,
-                postalCode: e.target.value,
-              })
-            }
-            className="w-full border rounded-lg p-2"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Country"
-            value={form.deliveryAddress.country}
-            onChange={e =>
-              updateField('deliveryAddress', {
-                ...form.deliveryAddress,
-                country: e.target.value,
-              })
-            }
-            className="w-full border rounded-lg p-2"
-            required
-          />
-        </div>
+      {/* RIGHT COLUMN */}
+      <div className="space-y-6">
+        {/* Restaurant & Promo Card */}
+        <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src="/restaurant-logo.png" alt="Restaurant" className="w-12 h-12 rounded-full object-cover" />
+              <div>
+                <p className="font-medium">Plaza Hotel & Bake House Wellawatte</p>
+                <p className="text-sm text-gray-500">203 A2</p>
+              </div>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600">›</button>
+          </div>
+          {/* <div className="bg-yellow-50 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <p className="font-medium">Save LKR 103.00 on this order with Uber One</p>
+              <p className="text-sm text-gray-600">Get yours now</p>
+            </div>
+            <img src="/promo-image.png" alt="Promo" className="w-16 h-16 object-cover rounded-lg" />
+          </div> */}
+          <button
+            onClick={onSubmit}
+            className="hidden lg:block w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
+          >
+            Continue to payment
+          </button>
+        </section>
 
-        {/* Notes & Promo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Notes (optional)"
-            value={form.notes}
-            onChange={e => updateField('notes', e.target.value)}
-            className="w-full border rounded-lg p-2"
-          />
-          <input
-            type="text"
-            placeholder="Promo Code (optional)"
-            value={form.promotionCode}
-            onChange={e => updateField('promotionCode', e.target.value)}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
+        {/* Cart Summary & Promotion & Total */}
+        {/* Cart Summary & Promotion & Total */}
+        <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+          {/* Cart Summary (collapsible) */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setIsCartOpen(o => !o)}
+              className="w-full flex items-center justify-between"
+            >
+              <span className="font-medium">
+                Cart summary ({form.items.length} {form.items.length === 1 ? 'item' : 'items'})
+              </span>
+              <svg
+                className={
+                  "w-5 h-5 text-gray-500 transform transition-transform " +
+                  (isCartOpen ? "rotate-180" : "rotate-0")
+                }
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
 
+            {/* item list */}
+            {isCartOpen && (
+              <ul className="mt-4 space-y-4">
+                {form.items.map((item, idx) => (
+                  <li key={idx} className="flex items-center justify-between">
+                    <div className="flex items-start space-x-4">
+                      {/* if you have thumbnails, swap this div for an <img> */}
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        📷
+                      </div>
+                      <div>
+                        <p className="font-medium">{item.name || "Unnamed item"}</p>
+                        {/* optional subtitle */}
+                        {/* <p className="text-sm text-gray-500">Choice of Size: Medium</p> */}
+                        <p className="text-sm text-gray-500">
+                          LKR {item.unitPrice.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className="ml-4 bg-gray-100 text-gray-700 px-2 py-1 rounded-lg text-sm">
+                      {item.quantity}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Promotion Code */}
+          {/* <div>
+            <button className="w-full flex items-center justify-between">
+              <span className="font-medium">Add promo code</span>
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+          </div> */}
+
+          {/* Order Total */}
+          <div className="space-y-2 text-lg font-medium">
+            {discountAmount > 0 && (
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span className="text-green-600">- LKR {discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>LKR {subtotal.toFixed(2)}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span>Fees</span>
+              <span>LKR {feesTotal.toFixed(2)}</span>
+            </div>
+
+            {/* breakdown */}
+            <div className="ml-4 space-y-1 text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>Delivery</span>
+                <span>LKR {deliveryFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Service</span>
+                <span>LKR {serviceFee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>LKR {tax.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between font-semibold">
+              <span>Total</span>
+              <span>LKR {total.toFixed(2)}</span>
+            </div>
+          </div>
+          <p className="text-left text-xs text-gray-500">
+            If you’re not around when the delivery person arrives, they’ll leave your order at the door.
+            By placing your order, you agree to take full responsibility for it once it’s delivered.
+            Orders containing alcohol or other restricted items may not be eligible for leave at door and will be returned to the store if you are not available.
+          </p>
+        </section>
+        {/* MOBILE-ONLY sticky footer */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white shadow-t lg:hidden">
         <button
-          type="submit"
-          className="w-full bg-blue-600 text-white rounded-lg p-3 font-medium hover:bg-blue-700"
+          onClick={onSubmit}
+          className="w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
         >
-          Place Order
+          Continue to payment
         </button>
-      </form>
+      </div>
+
+      </div>
     </div>
   );
 }

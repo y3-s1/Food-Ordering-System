@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { CreateOrderDTO } from '../../types/order/order';
+import { CreateOrderDTO, OrderDTO } from '../../types/order/order';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
@@ -7,10 +7,15 @@ const api = axios.create({
 });
 
 export const placeOrder = (data: CreateOrderDTO) =>
-  api.post('/api/orders', data);
+  api.post('/orders', data);
 
 export const fetchOrderById = (orderId: string) =>
-  api.get(`/api/orders/${orderId}`);
+  api.get(`/orders/${orderId}`);
 
 export const fetchOrderStatus = (orderId: string) =>
-  api.get(`/api/orders/${orderId}/status`);
+  api.get(`/orders/${orderId}/status`);
+
+export const fetchOrders = async (): Promise<OrderDTO[]> => {
+  const res = await api.get<OrderDTO[]>('/orders');
+  return res.data;
+};

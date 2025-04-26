@@ -24,7 +24,9 @@ export interface CartItem {
   
   // Draft type returned from /cart/draft
   export interface OrderDraft {
-    customerId: string;
+    customerId: string
+    customerName: string
+    customerPhone: string
     restaurantId: string;
     items: Array<{
       menuItemId: string;
