@@ -9,6 +9,7 @@ import { OrderDetailPage } from './pages/order/OrderDetailPage';
 import { OrderConfirmationPage } from './pages/order/OrderConfirmationPage';
 import OrderModificationPage from './pages/order/OrderModificationPage';
 import Navbar from './components/common/NavBar';
+import Footer from './components/common/Footer';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/order/:orderId" element={<OrderDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
           </Routes>
+        <Footer/>
         </main>
       </div>
     </BrowserRouter>
