@@ -6,6 +6,7 @@ import { StatusBadge } from './StatusBadge';
 import { OrderItemList } from './OrderItemList';
 import { OrderSummary } from './OrderSummary';
 import { AddressDetails } from './AddressDetails';
+import { OrderTrackingSection } from '../orderTracking/OrderTrackingSection';
 
 export const OrderDetails: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -26,34 +27,45 @@ export const OrderDetails: React.FC = () => {
   if (!order) return <p className="text-center mt-10">Order not found</p>;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Order Details</h1>
+    <div className="max-w-4xl mx-auto p-6 space-y-8 bg-gray-50">
+      {/* Tracking Section */}
+      {/* <OrderTrackingSection /> */}
+
+      {/* Header with Status Badge */}
+      <header className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-4 rounded-lg shadow">
+        <h1 className="text-2xl font-bold">Order #{order._id.slice(-6)}</h1>
         <StatusBadge status={order.status} />
       </header>
 
-      <section>
+      {/* Items List */}
+      <section className="bg-white p-4 rounded-lg shadow">
+        {/* <h2 className="text-xl font-semibold mb-4">Items</h2> */}
         <OrderItemList items={order.items} />
       </section>
 
-      <section>
-        <OrderSummary
-          deliveryFee={order.fees.deliveryFee}
-          serviceFee={order.fees.serviceFee}
-          tax={order.fees.tax}
-          totalPrice={order.totalPrice}
-        />
-      </section>
+      {/* Summary and Address side by side on md+ */}
+      <div className="flex flex-col md:flex-row md:space-x-6">
+        <section className="flex-1 bg-white p-4 rounded-lg shadow mb-6 md:mb-0">
+          {/* <h2 className="text-xl font-semibold mb-4">Summary</h2> */}
+          <OrderSummary
+            deliveryFee={order.fees.deliveryFee}
+            serviceFee={order.fees.serviceFee}
+            tax={order.fees.tax}
+            totalPrice={order.totalPrice}
+          />
+        </section>
+        <section className="flex-1 bg-white p-4 rounded-lg shadow">
+          {/* <h2 className="text-xl font-semibold mb-4">Delivery Address</h2> */}
+          <AddressDetails {...order.deliveryAddress} />
+        </section>
+      </div>
 
-      <section>
-        <AddressDetails {...order.deliveryAddress} />
-      </section>
-
+      {/* Notes */}
       {order.notes && (
-        <div className="bg-white shadow-sm rounded-lg p-4">
-          <h2 className="text-lg font-semibold mb-2">Notes</h2>
-          <p>{order.notes}</p>
-        </div>
+        <section className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-xl font-semibold mb-2">Notes</h2>
+          <p className="text-gray-700">{order.notes}</p>
+        </section>
       )}
     </div>
   );
