@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Delivery } from '../types/delivery';
 import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
+import { updateDriverLocation } from '../api/driver';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingDeliveryId, setUpdatingDeliveryId] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
 
@@ -30,6 +32,39 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      return;
+    }
+  
+    const watchId = navigator.geolocation.watchPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          await updateDriverLocation(driverId, latitude, longitude);
+          console.log('Location updated:', latitude, longitude);
+        } catch (error) {
+          console.error('Failed to update location', error);
+        }
+      },
+      (error) => {
+        setLocationError('Failed to get your location');
+        console.error('Error getting location:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5000,
+      }
+    );
+  
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+  
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setUpdatingDeliveryId(id);
@@ -67,6 +102,12 @@ const Dashboard = () => {
       <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">
         🚚 Delivery Dashboard
       </h1>
+
+      {locationError && (
+        <div className="text-center text-red-600 font-semibold my-2">
+          {locationError}
+        </div>
+      )}
 
       <div className="grid gap-4">
         {deliveries.map((delivery) => (
