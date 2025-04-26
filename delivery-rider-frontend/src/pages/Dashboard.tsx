@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Delivery } from '../types/delivery';
 import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
 import { updateDriverLocation } from '../api/driver';
 import toast from 'react-hot-toast';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useRef } from 'react';
+import { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 
 
@@ -13,6 +15,9 @@ const Dashboard = () => {
   const [updatingDeliveryId, setUpdatingDeliveryId] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [activeDelivery, setActiveDelivery] = useState<Delivery | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(15);
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
 
@@ -21,26 +26,44 @@ const Dashboard = () => {
     deliveryId: string | null;
   }>(() => ({ visible: false, deliveryId: null }));
 
-  const customMarker = new L.Icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+  const riderIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
   });
+  
+  const deliveryIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3177/3177361.png',
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+  });  
+
+
+
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await getDeliveriesByDriver(driverId);
+      setDeliveries(data);
+  
+      const active = data.find((d) => d.status === 'OUT_FOR_DELIVERY');
+      if (active) {
+        setActiveDelivery(active);
+        setZoomLevel(9);   // Zoom out when there is active delivery
+      } else {
+        setActiveDelivery(null);
+        setZoomLevel(15);  // Normal zoom otherwise
+      }
+    } catch (error) {
+      console.error('Failed to fetch deliveries', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [driverId]); 
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getDeliveriesByDriver(driverId);
-        setDeliveries(data);
-      } catch (error) {
-        console.error('Failed to fetch deliveries', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [fetchData]);
+
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -74,7 +97,23 @@ const Dashboard = () => {
       navigator.geolocation.clearWatch(watchId);
     };
   }, []);
+
+
+  useEffect(() => {
+    if (mapRef.current && currentPosition) {
+      mapRef.current.flyTo(
+        [currentPosition.lat, currentPosition.lng],
+        zoomLevel,
+        {
+          animate: true,
+          duration: 1.5,
+        }
+      );
+    }
+  }, [zoomLevel, currentPosition]);
   
+
+
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setUpdatingDeliveryId(id);
@@ -85,12 +124,12 @@ const Dashboard = () => {
     );
     try {
       const updatedDelivery = await updateDeliveryStatus(id, newStatus);
-      setDeliveries((prev) =>
-        prev.map((d) => (d._id === id ? updatedDelivery : d))
-      );
+
+      await fetchData();
+  
       toast.success(
         newStatus === 'DELIVERED'
-          ? 'Marked as Delivered!'
+          ? '✅ Marked as Delivered!'
           : '🚚 Marked as Out for Delivery',
         { id: toastId }
       );
@@ -101,6 +140,7 @@ const Dashboard = () => {
       setUpdatingDeliveryId(null);
     }
   };
+  
   
 
   if (loading) {
@@ -123,19 +163,35 @@ const Dashboard = () => {
         <div className="h-64 w-full mb-6">
           <MapContainer
             center={[currentPosition.lat, currentPosition.lng]}
-            zoom={15}
+            zoom={zoomLevel}
             scrollWheelZoom={false}
             className="h-full w-full rounded-lg shadow"
+            ref={(mapInstance: LeafletMap) => {
+              mapRef.current = mapInstance;
+            }}
           >
             <TileLayer
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+              attribution='&copy; OpenStreetMap'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Marker position={[currentPosition.lat, currentPosition.lng]} icon={customMarker}>
-              <Popup>
-                🚴‍♂️ You are here
-              </Popup>
+
+            {/* Rider Marker */}
+            <Marker
+              position={[currentPosition.lat, currentPosition.lng]}
+              icon={riderIcon}
+            >
+              <Popup>🚴‍♂️ You (Rider)</Popup>
             </Marker>
+
+            {/* Delivery Destination Marker */}
+            {activeDelivery && activeDelivery.location && (
+              <Marker
+                position={[activeDelivery.location.lat, activeDelivery.location.lng]}
+                icon={deliveryIcon}
+              >
+                <Popup>📦 Delivery Destination</Popup>
+              </Marker>
+            )}
           </MapContainer>
         </div>
       )}
