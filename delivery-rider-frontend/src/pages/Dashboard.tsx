@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Delivery } from '../types/delivery';
 import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingDeliveryId, setUpdatingDeliveryId] = useState<string | null>(null);
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
+
+  const [confirmModal, setConfirmModal] = useState<{
+    visible: boolean;
+    deliveryId: string | null;
+  }>(() => ({ visible: false, deliveryId: null }));
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,15 +32,28 @@ const Dashboard = () => {
   }, []);
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
+    setUpdatingDeliveryId(id);
+    const toastId = toast.loading(
+      newStatus === 'DELIVERED'
+        ? 'Marking as Delivered...'
+        : 'Starting Delivery...'
+    );
     try {
       const updatedDelivery = await updateDeliveryStatus(id, newStatus);
-      setDeliveries((prevDeliveries) =>
-        prevDeliveries.map((delivery) =>
-          delivery._id === id ? updatedDelivery : delivery
-        )
+      setDeliveries((prev) =>
+        prev.map((d) => (d._id === id ? updatedDelivery : d))
+      );
+      toast.success(
+        newStatus === 'DELIVERED'
+          ? 'Marked as Delivered!'
+          : '🚚 Marked as Out for Delivery',
+        { id: toastId }
       );
     } catch (error) {
       console.error('Failed to update status', error);
+      toast.error('Failed to update delivery status', { id: toastId });
+    } finally {
+      setUpdatingDeliveryId(null);
     }
   };
   
@@ -74,19 +95,30 @@ const Dashboard = () => {
               ETA: {new Date(delivery.estimatedTime).toLocaleTimeString()}
             </p>
           
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex gap-2 transition-opacity duration-200">
               {delivery.status === 'ASSIGNED' && (
                 <button
                   onClick={() => handleStatusUpdate(delivery._id, 'OUT_FOR_DELIVERY')}
-                  className="bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition"
+                  disabled={updatingDeliveryId === delivery._id}
+                  className={`${
+                    updatingDeliveryId === delivery._id ? 'opacity-50 cursor-not-allowed' : ''
+                  } bg-yellow-500 text-white px-4 py-1 rounded hover:bg-yellow-600 transition`}
                 >
-                  Start Delivery
+                  {updatingDeliveryId === delivery._id ? 'Updating...' : 'Start Delivery'}
                 </button>
               )}
+
               {delivery.status === 'OUT_FOR_DELIVERY' && (
                 <button
-                  onClick={() => handleStatusUpdate(delivery._id, 'DELIVERED')}
-                  className="bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition"
+                  onClick={() =>
+                    setConfirmModal({ visible: true, deliveryId: delivery._id })
+                  }
+                  disabled={updatingDeliveryId === delivery._id}
+                  className={`${
+                    updatingDeliveryId === delivery._id
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                  } bg-green-500 text-white px-4 py-1 rounded hover:bg-green-600 transition`}
                 >
                   Mark Delivered
                 </button>
@@ -95,6 +127,41 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+        {confirmModal.visible && (
+          <div className="fixed inset-0 backdrop-blur-xs bg-black/10 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-md w-80">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Confirm Delivery
+              </h3>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to mark this delivery as <b>Delivered</b>?
+              </p>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  onClick={() => setConfirmModal({ visible: false, deliveryId: null })}
+                  className="px-3 py-1 rounded text-gray-700 border border-gray-300 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirmModal.deliveryId) {
+                      await handleStatusUpdate(
+                        confirmModal.deliveryId,
+                        'DELIVERED'
+                      );
+                      setConfirmModal({ visible: false, deliveryId: null });
+                    }
+                  }}
+                  className="px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700"
+                >
+                  Yes, Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
