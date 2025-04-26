@@ -10,18 +10,13 @@ type FormData = {
   name: string;
   email: string;
   password: string;
-  role: string;
+  role: "customer" | "restaurantOwner" | "deliveryAgent" | "";
 };
 
 export default function Register() {
   const [loading, setLoading] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<FormData>({
-    resolver: yupResolver(registerSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: yupResolver(registerSchema) as any,
     defaultValues: {
       name: "",
       email: "",
@@ -35,7 +30,13 @@ export default function Register() {
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      await userApi.post("/auth/register", data);
+      const response = await userApi.post("/auth/register", data);
+      
+      // ✅ Store EMAIL not ID
+      if (response.data && response.data.email) {
+        localStorage.setItem("pendingEmail", response.data.email);
+      }
+      
       toast.success("✅ OTP sent. Please verify.");
       navigate("/verify-otp");
     } catch (err: any) {
@@ -57,7 +58,7 @@ export default function Register() {
             <input
               {...register("name")}
               placeholder="John Doe"
-              className={`input w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? "border-red-500" : "border-gray-300"
               }`}
             />
@@ -71,7 +72,7 @@ export default function Register() {
               type="email"
               {...register("email")}
               placeholder="example@mail.com"
-              className={`input w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
                 errors.email ? "border-red-500" : "border-gray-300"
               }`}
             />
@@ -85,7 +86,7 @@ export default function Register() {
               type="password"
               {...register("password")}
               placeholder="••••••••"
-              className={`input w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
                 errors.password ? "border-red-500" : "border-gray-300"
               }`}
             />
@@ -97,7 +98,7 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Role</label>
             <select
               {...register("role")}
-              className={`input w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 ${
                 errors.role ? "border-red-500" : "border-gray-300"
               }`}
             >

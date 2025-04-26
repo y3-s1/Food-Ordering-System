@@ -24,7 +24,12 @@ export default function Login() {
       const res = await userApi.post('/auth/login', data);
       login(res.data.user);
       toast.success("Login successful");
-      navigate('/dashboard');
+       // Redirect based on role
+      if (res.data.user.isAdmin) {
+        navigate('/admin'); // Go to Admin Dashboard
+      } else {
+        navigate('/dashboard'); // Go to User Dashboard
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Login failed");
     }

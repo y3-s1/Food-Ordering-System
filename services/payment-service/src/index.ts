@@ -2,8 +2,11 @@ import express, { Application } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import paymentRoutes from './routes/paymentRoutes';
+import refundRoutes from "./routes/refundRoutes";
+import webhookRoutes from './routes/webhookRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import bodyParser from 'body-parser';
+
 
 dotenv.config();
 
@@ -21,6 +24,8 @@ app.use(cors());
 
 // Payment Routes
 app.use('/api/payments', paymentRoutes);
+app.use("/api/refunds", refundRoutes);
+app.use("/api", webhookRoutes);
 
 // Global Error Handler
 app.use(errorHandler);

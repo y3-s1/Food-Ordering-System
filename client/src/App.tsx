@@ -8,6 +8,9 @@ import Login from "./pages/Login";
 import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./routes/PrivateRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CheckoutPage from "./pages/payment/CheckoutPage";
+import StripeProvider from "./stripe/StripeProvider";
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -19,6 +22,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
       </Routes>
     </Router>
     
