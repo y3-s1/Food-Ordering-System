@@ -8,6 +8,10 @@ export interface Delivery {
     lat: number;
     lng: number;
   };
+  resLocation: {
+    lat: number;
+    lng: number;
+  };
   estimatedTime: string;
   completedAt?: string;
   createdAt: string;

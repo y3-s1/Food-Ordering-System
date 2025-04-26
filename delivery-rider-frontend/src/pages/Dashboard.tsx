@@ -8,6 +8,7 @@ import { useRef } from 'react';
 import { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import { calculateDistance } from '../utils/geo';
+import NavigateButton from '../components/NavigateButton';
 
 
 const Dashboard = () => {
@@ -279,6 +280,7 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+      <NavigateButton currentPosition={currentPosition} deliveries={deliveries} />
         {confirmModal.visible && (
           <div className="fixed inset-0 backdrop-blur-xs bg-black/10 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-md w-80 animate-fadeIn">
