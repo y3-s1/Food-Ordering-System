@@ -3,12 +3,16 @@ import { Delivery } from '../types/delivery';
 import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
 import { updateDriverLocation } from '../api/driver';
 import toast from 'react-hot-toast';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
 
 const Dashboard = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingDeliveryId, setUpdatingDeliveryId] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
 
@@ -17,6 +21,11 @@ const Dashboard = () => {
     deliveryId: string | null;
   }>(() => ({ visible: false, deliveryId: null }));
 
+  const customMarker = new L.Icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +51,7 @@ const Dashboard = () => {
     const watchId = navigator.geolocation.watchPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        setCurrentPosition({ lat: latitude, lng: longitude });
         try {
           await updateDriverLocation(driverId, latitude, longitude);
           console.log('Location updated:', latitude, longitude);
@@ -106,6 +116,27 @@ const Dashboard = () => {
       {locationError && (
         <div className="text-center text-red-600 font-semibold my-2">
           {locationError}
+        </div>
+      )}
+
+      {currentPosition && (
+        <div className="h-64 w-full mb-6">
+          <MapContainer
+            center={[currentPosition.lat, currentPosition.lng]}
+            zoom={15}
+            scrollWheelZoom={false}
+            className="h-full w-full rounded-lg shadow"
+          >
+            <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={[currentPosition.lat, currentPosition.lng]} icon={customMarker}>
+              <Popup>
+                🚴‍♂️ You are here
+              </Popup>
+            </Marker>
+          </MapContainer>
         </div>
       )}
 
