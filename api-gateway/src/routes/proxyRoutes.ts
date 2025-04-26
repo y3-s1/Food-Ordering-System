@@ -16,6 +16,12 @@ router.use('/api/orders', createProxyMiddleware({
   pathRewrite: { '^/api/orders': '' }
 }));
 
+router.use('/api/cart', createProxyMiddleware({
+  target: SERVICE_URLS.cart,
+  changeOrigin: true,
+  pathRewrite: { '^/api/cart': '' }
+}));
+
 router.use('/api/restaurants', createProxyMiddleware({
   target: SERVICE_URLS.restaurant,
   changeOrigin: true,

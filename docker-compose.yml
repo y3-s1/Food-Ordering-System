@@ -18,6 +18,7 @@ services:
     depends_on:
       - delivery-service
       - order-service
+      - cart-service
       # - restaurant-service
       # - user-service
 
@@ -38,6 +39,16 @@ services:
       - "5002:5002"
     env_file:
       - ./services/order-service/.env
+    depends_on:
+      - mongo
+
+  cart-service:
+    build: ./services/cart-service
+    container_name: cart-service
+    ports:
+      - "5005:5005"
+    env_file:
+      - ./services/cart-service/.env
     depends_on:
       - mongo
 
