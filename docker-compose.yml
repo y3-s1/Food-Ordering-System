@@ -19,7 +19,7 @@ services:
       # - delivery-service
       - order-service
       # - restaurant-service
-      # - user-service
+      - user-service
 
   # delivery-service:
   #   build: ./services/delivery-service
