@@ -2,20 +2,23 @@ import React, { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-react';
 import CartDrawer from '../cart/CartDrawer';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const Navbar: FC = () => {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [isCartOpen, setCartOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Decide based on viewport width whether to open drawer (desktop) or navigate (mobile)
+  // detect desktop (>=768px)
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
   const handleCartClick = () => {
-    if (window.innerWidth < 768) {
-      // Mobile: go to cart page
-      navigate('/cart');
-    } else {
-      // Desktop: open slide-over drawer
+    if (isDesktop) {
+      // Desktop: open drawer
       setCartOpen(true);
+    } else {
+      // Mobile: navigate to full-page cart
+      navigate('/cart');
     }
   };
 
