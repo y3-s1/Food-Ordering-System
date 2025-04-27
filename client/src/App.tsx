@@ -28,6 +28,13 @@ function App() {
             <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
             <Route path="/order/:orderId" element={<OrderDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
+            
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+            <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
           </Routes>
         <Footer/>
         </main>

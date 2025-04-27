@@ -1,17 +1,11 @@
-import express from 'express';
-import { createPaymentIntent, handleWebhook } from '../controllers/paymentController';
-import bodyParser from 'body-parser';
+import express from "express";
+import { createPaymentIntent, savePayment, getUserPayments, getAllPayments } from "../controllers/paymentController";
 
 const router = express.Router();
 
-// Normal routes
-router.post('/create-intent', createPaymentIntent);
-
-// Stripe webhook route (needs raw body)
-router.post(
-  '/webhook',
-  bodyParser.raw({ type: 'application/json' }),
-  handleWebhook
-);
+router.post("/create-payment-intent", createPaymentIntent);
+router.post("/save-payment", savePayment);
+router.get("/user/:userId", getUserPayments);
+router.get("/all", getAllPayments);
 
 export default router;
