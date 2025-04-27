@@ -8,12 +8,19 @@ import {
 } from "@stripe/react-stripe-js";
 import paymentApi from "../../api/paymentApi"; 
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+
+interface LocationState {
+  orderId: string;
+  amount: number;
+}
 
 export default function CheckoutPage() {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { orderId, amount } = state as LocationState;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +29,7 @@ export default function CheckoutPage() {
     const createPaymentIntent = async () => {
       try {
         const res = await paymentApi.post("/payments/create-payment-intent", {
-          amount: 1000, // This means ₨10.00 if currency is LKR
+          amount, // This means ₨10.00 if currency is LKR
         });
         setClientSecret(res.data.clientSecret);
       } catch (err) {
@@ -49,10 +56,10 @@ export default function CheckoutPage() {
     if (result.error) {
       console.error(result.error);
       toast.error(result.error.message || "Payment failed");
-      navigate("/payment-failure");
+      navigate(-1);
     } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
       toast.success("🎉 Payment Successful!");
-      navigate("/payment-success");
+      navigate(`/order/confirm/${orderId}`);
     }
 
     setLoading(false);

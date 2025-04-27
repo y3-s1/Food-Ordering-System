@@ -27,6 +27,7 @@ export interface CartItem {
     customerId: string
     customerName: string
     customerPhone: string
+    customerEmail: string;
     restaurantId: string;
     items: Array<{
       menuItemId: string;
@@ -42,5 +43,6 @@ export interface CartItem {
       tax: number;
     };
     totalPrice: number;
+    notes: string;
   }
   
