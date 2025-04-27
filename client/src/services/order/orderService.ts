@@ -22,3 +22,6 @@ export const fetchOrders = async (): Promise<OrderDTO[]> => {
 
 export const modifyOrder = (orderId: string, data: OrderDTO) =>
   api.put<OrderDTO>(`/orders/${orderId}`, data);
+
+export const updateOrderStatus = (orderId: string, status: string) =>
+  api.put<OrderDTO>(`/orders/${orderId}/status`, { status });

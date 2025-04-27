@@ -9,6 +9,7 @@ import {
 import paymentApi from "../../api/paymentApi"; 
 import { toast } from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
+import { updateOrderStatus } from "../../services/order/orderService";
 
 interface LocationState {
   orderId: string;
@@ -44,26 +45,38 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements || !clientSecret) return;
-
+  
     setLoading(true);
-
+  
     const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: elements.getElement(CardNumberElement)!,
       },
     });
-
+  
     if (result.error) {
       console.error(result.error);
       toast.error(result.error.message || "Payment failed");
+  
+      // 1) update to PaymentFail
+      await updateOrderStatus(orderId, 'PaymentFail');
+  
+      // 2) go back so user can retry or choose another method
       navigate(-1);
-    } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
+    }
+    else if (result.paymentIntent?.status === "succeeded") {
       toast.success("🎉 Payment Successful!");
+  
+      // 1) update to Confirmed
+      await updateOrderStatus(orderId, 'Confirmed');
+  
+      // 2) proceed to confirmation
       navigate(`/order/confirm/${orderId}`);
     }
-
+  
     setLoading(false);
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

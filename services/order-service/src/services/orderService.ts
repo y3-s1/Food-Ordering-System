@@ -222,7 +222,7 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
  */
 export async function updateOrderStatus(
   orderId: string,
-  newStatus: 'Preparing' | 'OutForDelivery' | 'Delivered'
+  newStatus: 'Preparing' | 'OutForDelivery' | 'Delivered' | 'Confirmed' | 'PaymentFail'
 ): Promise<IOrder> {
   const order = await Order.findById(orderId);
   if (!order) throw { status: 404, message: 'Order not found' };
@@ -231,7 +231,8 @@ export async function updateOrderStatus(
   const allowed: Record<string, string[]> = {
     Confirmed: ['Preparing'],
     Preparing: ['OutForDelivery'],
-    OutForDelivery: ['Delivered']
+    OutForDelivery: ['Delivered'],
+    PaymentPending: ['Confirmed' , 'PaymentFail'],
   };
 
   const current = order.status;

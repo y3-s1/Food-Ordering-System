@@ -110,7 +110,7 @@ export const updateStatusController = async (
     const { orderId } = req.params;
     const { status } = req.body;
     if (!status) throw { status: 400, message: 'Missing status in body' };
-    const validStatuses = ['Preparing', 'OutForDelivery', 'Delivered'];
+    const validStatuses = ['Preparing', 'OutForDelivery', 'Delivered', 'Confirmed', 'PaymentFail'];
     if (!validStatuses.includes(status)) {
       throw { status: 400, message: 'Invalid status value' };
     }
