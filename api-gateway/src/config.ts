@@ -3,6 +3,7 @@ export const SERVICE_URLS = {
     order: process.env.ORDER_SERVICE_URL || 'http://order-service:5002',
     cart: process.env.CART_SERVICE_URL || 'http://cart-service:5005',
     restaurant: process.env.RESTAURANT_SERVICE_URL || 'http://restaurant-service:5001',
-    user: process.env.USER_SERVICE_URL || 'http://user-service:5004'
+    user: process.env.USER_SERVICE_URL || 'http://user-service:5004',
+    payment: process.env.PAYMENT_SERVICE_URL || 'http://payment-service:5006'
   };
   

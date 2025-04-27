@@ -170,6 +170,7 @@ export async function generateDraft(
     restaurantId: cart.items[0]._doc.restaurantId,
     items: cart.items.map(i => ({
       menuItemId: i.menuItemId,
+      name: i.name,
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       notes: i.notes

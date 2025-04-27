@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft } from '../../services/cart/cartService';
 import CartComponent from '../../components/cart/Cart';
 import { Cart, OrderDraft } from '../../types/cart/cart';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const CartPage: React.FC = () => {
   const [cart, setCart] = useState<Cart>({
@@ -10,9 +11,19 @@ const CartPage: React.FC = () => {
     discountAmount: 0,
     subtotal: 0,
     fees: { deliveryFee: 0, serviceFee: 0, tax: 0 },
-    total: 0
+    total: 0,
   });
   const navigate = useNavigate();
+
+  // detect desktop > hide page on desktop
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  useEffect(() => {
+    if (isDesktop) {
+      // If resized to desktop while on /cart, redirect back or close
+      // navigate('/', { replace: true });
+    }
+  }, [isDesktop, navigate]);
 
   useEffect(() => {
     fetchCart().then(setCart);
@@ -41,7 +52,7 @@ const CartPage: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-end p-6">
+    <div className="flex justify-end p-6 md:justify-end md:p-0">
       <CartComponent
         cart={cart}
         onUpdateQty={handleUpdateQty}

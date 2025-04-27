@@ -34,5 +34,6 @@ export const fetchDraft = async (): Promise<OrderDraft> => {
     const res = await axios.get<OrderDraft>('http://localhost:5005/api/v1/cart/draft', {
         headers: { 'Content-Type': 'application/json', 'x-cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
     });
+    console.log('res.data.order', res.data)
     return res.data;
   };
