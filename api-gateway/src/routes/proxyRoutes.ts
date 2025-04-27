@@ -7,13 +7,18 @@ const router = express.Router();
 router.use('/api/deliveries', createProxyMiddleware({
   target: SERVICE_URLS.delivery,
   changeOrigin: true,
-  pathRewrite: { '^/api/deliveries': '' }
 }));
 
 router.use('/api/orders', createProxyMiddleware({
   target: SERVICE_URLS.order,
   changeOrigin: true,
   pathRewrite: { '^/api/orders': '' }
+}));
+
+router.use('/api/cart', createProxyMiddleware({
+  target: SERVICE_URLS.cart,
+  changeOrigin: true,
+  pathRewrite: { '^/api/cart': '' }
 }));
 
 router.use('/api/restaurants', createProxyMiddleware({
