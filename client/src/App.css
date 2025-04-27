@@ -1,6 +1,19 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+}
+
+/* hide scrollbar for Chrome, Safari & Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* hide scrollbar for Firefox */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* hide scrollbar for IE, Edge */
+.hide-scrollbar {
+  -ms-overflow-style: none;
 }
