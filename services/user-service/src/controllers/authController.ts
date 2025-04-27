@@ -7,7 +7,7 @@ import { sendOtpEmail, sendConfirmationEmail } from '../services/emailService';
 import crypto from 'crypto';
 
 // Define a type for token generation that matches the expected input
-interface TokenPayload {
+export interface TokenPayload {
   _id: string;
   email: string;
   isAdmin: boolean;
@@ -45,28 +45,24 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     await sendOtpEmail(email, otp);
-    res.status(201).json({ message: 'OTP sent to email', userId: user._id });
+    res.status(201).json({ message: 'OTP sent to email',email: user.email });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Registration failed' });
   }
 };
-
 // Verify OTP
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId, otp }: { userId: string; otp: string } = req.body;
-    const user: IUser | null = await User.findById(userId);
+    const { email, otp }: { email: string; otp: string } = req.body;
+    const user = await User.findOne({ email });
 
     if (!user) {
       res.status(400).json({ error: 'User not found' });
       return;
     }
 
-    // Check if OTP is valid and not expired
-    if (!user.otp || !user.otpExpires || 
-        user.otp !== otp || 
-        user.otpExpires < new Date()) {
+    if (!user.otp || !user.otpExpires || user.otp !== otp || user.otpExpires < new Date()) {
       res.status(400).json({ error: 'Invalid or expired OTP' });
       return;
     }
@@ -79,7 +75,37 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     await sendConfirmationEmail(user.email);
     res.json({ message: 'User verified successfully' });
   } catch (error) {
+    console.error('OTP verification error:', error);
     res.status(500).json({ error: 'OTP verification failed' });
+  }
+};
+
+// Resend OTP
+export const resendOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email }: { email: string } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (user.isVerified) {
+      res.status(400).json({ error: "User already verified" });
+      return;
+    }
+
+    const newOtp = crypto.randomInt(100000, 999999).toString();
+    user.otp = newOtp;
+    user.otpExpires = new Date(Date.now() + 300_000);
+    await user.save();
+
+    await sendOtpEmail(user.email, newOtp);
+    res.status(200).json({ message: "OTP resent successfully" });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    res.status(500).json({ error: "Failed to resend OTP" });
   }
 };
 
