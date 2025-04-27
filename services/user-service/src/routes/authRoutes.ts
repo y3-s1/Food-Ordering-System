@@ -1,7 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
-import { register, verifyOtp, login, logout } from '../controllers/authController';
+import { register, verifyOtp, login, logout ,resendOtp } from '../controllers/authController';
 import { generateToken } from '../utils/tokenUtils';
+import { UserRole } from '../models/User';
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ interface IUser {
   name: string;
   email: string;
   isAdmin: boolean;
+  role: UserRole;
 }
 
 // Route to register user
@@ -18,6 +20,9 @@ router.post('/register', register);
 
 // Route to verify OTP
 router.post('/verify-otp', verifyOtp);
+
+router.post('/resend-otp', resendOtp);
+
 
 // Route to login user
 router.post('/login', login);
@@ -38,13 +43,14 @@ router.get('/google/callback',
     const user = req.user as IUser;
 
     // Generate JWT token and set cookie
-    const token = generateToken(user);
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
+    const token = generateToken({
+      _id: user._id,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      role: user.role,
     });
+
+    res.setHeader('Authorization', `Bearer ${token}`);
 
     res.redirect('/'); // Or redirect to frontend page
   }

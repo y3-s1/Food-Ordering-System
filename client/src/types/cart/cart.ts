@@ -31,6 +31,7 @@ export interface CartItem {
     items: Array<{
       menuItemId: string;
       quantity: number;
+      name: string,
       unitPrice: number;
       notes?: string;
     }>;
