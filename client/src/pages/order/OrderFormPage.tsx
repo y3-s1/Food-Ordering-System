@@ -1,65 +1,83 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { placeOrder } from '../../services/order/orderService';
 import type { CreateOrderDTO, OrderItemDTO } from '../../types/order/order';
 import { OrderDraft } from '../../types/cart/cart';
+import { getRestaurantById } from '../../services/resturent/restaurantService';
+
+interface IRestaurant {
+  _id: string;
+  name: string;
+  description: string;
+  address: string;
+  contactNumber: string;
+  email: string;
+  cuisineType: string[];
+  openingHours: string;
+  isAvailable: boolean;
+  imageUrl: string;
+  approvalStatus: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
 
 export function OrderFormPage() {
   const navigate = useNavigate();
   const { state: draft } = useLocation() as { state: OrderDraft };
+  const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(true);
-  const [deliveryOption, setDeliveryOption] = useState< 'Standard' | 'PickUp'>('Standard');
-  // const [deliveryOption, setDeliveryOption] = useState<'Priority' | 'Standard' | 'Schedule'>('Standard');
-
+  const [deliveryOption, setDeliveryOption] = useState<'Standard' | 'PickUp'>('Standard');
   const [form, setForm] = useState<CreateOrderDTO>({
     customerId: draft?.customerId || '',
-  customerName: draft?.customerName || '',
-  customerPhone: draft?.customerPhone || '',
-  restaurantId: draft?.restaurantId || '',
-  items: draft
-    ? draft.items.map(i => ({
-        menuItemId: i.menuItemId,
-        name: '', // Optionally fill if name is available in draft
-        quantity: i.quantity,
-        unitPrice: i.unitPrice
-      }))
-    : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
-  deliveryAddress: {
-    street: '',
-    city: '',
-    postalCode: '',
-    country: ''
-  },
-  notes: '',
-  promotionCode: draft?.promotionCode || '',
-  fees: {
-    deliveryFee: draft?.fees?.deliveryFee || 0,
-    serviceFee: draft?.fees?.serviceFee || 0,
-    tax: draft?.fees?.tax || 0
-  },
-  totalPrice: draft?.totalPrice || 0
+    customerName: draft?.customerName || '',
+    customerPhone: draft?.customerPhone || '',
+    restaurantId: draft?.restaurantId || '',
+    items: draft
+      ? draft.items.map(i => ({
+          menuItemId: i.menuItemId,
+          name: '',
+          quantity: i.quantity,
+          unitPrice: i.unitPrice
+        }))
+      : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
+    deliveryAddress: {
+      street: '',
+      city: '',
+      postalCode: '',
+      country: ''
+    },
+    notes: '',
+    promotionCode: draft?.promotionCode || '',
+    fees: {
+      deliveryFee: draft?.fees?.deliveryFee || 0,
+      serviceFee: draft?.fees?.serviceFee || 0,
+      tax: draft?.fees?.tax || 0
+    },
+    totalPrice: draft?.totalPrice || 0
   });
 
-  // inside your component, before the return
+  // Fetch restaurant details when restaurantId is available
+  useEffect(() => {
+    if (form.restaurantId) {
+      getRestaurantById(form.restaurantId)
+        .then(res => setRestaurant(res))
+        .catch(err => console.error('Failed to load restaurant', err));
+    }
+  }, [form.restaurantId]);
+
+  useEffect(() => {
+    console.log('restaurant', restaurant)
+  }, [restaurant]);
+
+
   const subtotal = form.items.reduce(
     (sum, itm) => sum + itm.unitPrice * itm.quantity,
     0
   );
-
-  // if you ever have a discount, calculate it here:
-  const discountAmount = 0; // or pull from form or promo response
-
-  const { deliveryFee, serviceFee, tax } = form.fees ?? {
-    deliveryFee: 0,
-    serviceFee: 0,
-    tax: 0,
-  };
-
+  const discountAmount = 0;
+  const { deliveryFee, serviceFee, tax } = form.fees ?? { deliveryFee: 0, serviceFee: 0, tax: 0 };
   const feesTotal = deliveryFee + serviceFee + tax;
-
-  // you said your DTO also has totalPrice, but you could also do:
   const total = subtotal - discountAmount + feesTotal;
-
 
   function updateField<K extends keyof CreateOrderDTO>(key: K, value: CreateOrderDTO[K]) {
     setForm(f => ({ ...f, [key]: value }));
@@ -76,7 +94,7 @@ export function OrderFormPage() {
   function addItem() {
     setForm(f => ({
       ...f,
-      items: [...f.items, { menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
+      items: [...f.items, { menuItemId: '', name: '', quantity: 1, unitPrice: 0 }]
     }));
   }
 
@@ -231,23 +249,24 @@ export function OrderFormPage() {
       <div className="space-y-6">
         {/* Restaurant & Promo Card */}
         <section className="bg-white rounded-2xl p-6 shadow space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img src="/restaurant-logo.png" alt="Restaurant" className="w-12 h-12 rounded-full object-cover" />
-              <div>
-                <p className="font-medium">Plaza Hotel & Bake House Wellawatte</p>
-                <p className="text-sm text-gray-500">203 A2</p>
+          {restaurant ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <img
+                  src={restaurant.imageUrl || '/restaurant-logo.png'}
+                  alt={restaurant.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-medium">{restaurant.name}</p>
+                  <p className="text-sm text-gray-500">{restaurant.address}</p>
+                </div>
               </div>
+              <button className="text-gray-400 hover:text-gray-600">›</button>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">›</button>
-          </div>
-          {/* <div className="bg-yellow-50 rounded-lg p-4 flex items-center justify-between">
-            <div>
-              <p className="font-medium">Save LKR 103.00 on this order with Uber One</p>
-              <p className="text-sm text-gray-600">Get yours now</p>
-            </div>
-            <img src="/promo-image.png" alt="Promo" className="w-16 h-16 object-cover rounded-lg" />
-          </div> */}
+          ) : (
+            <p>Loading restaurant information…</p>
+          )}
           <button
             onClick={onSubmit}
             className="hidden lg:block w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
