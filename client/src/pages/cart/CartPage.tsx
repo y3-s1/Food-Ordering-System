@@ -41,7 +41,7 @@ const CartPage: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-end p-6">
+    <div className="flex justify-end p-6 md:justify-end md:p-0">
       <CartComponent
         cart={cart}
         onUpdateQty={handleUpdateQty}

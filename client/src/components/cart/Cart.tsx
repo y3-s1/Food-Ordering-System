@@ -33,7 +33,7 @@ const CartComponent: React.FC<Props> = ({ cart, onUpdateQty, onRemove, onClearCa
   }, [menuOpen]);
 
   return (
-    <div className="w-full md:w-1/3 bg-white shadow-lg p-4 relative">
+    <div className="w-full md:w-full bg-white shadow-lg p-4 relative">
       {/* Three-dot menu button */}
       <button
         onClick={() => setMenuOpen(o => !o)}
