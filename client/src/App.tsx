@@ -43,7 +43,6 @@ function App() {
           path="/cart"
           element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
         />
-            <Route path="/cart/item" element={<FoodItemModel/>} />
             
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
