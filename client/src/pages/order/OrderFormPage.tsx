@@ -35,7 +35,7 @@ export function OrderFormPage() {
     items: draft
       ? draft.items.map(i => ({
           menuItemId: i.menuItemId,
-          name: '',
+          name: i.name,
           quantity: i.quantity,
           unitPrice: i.unitPrice
         }))

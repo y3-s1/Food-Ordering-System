@@ -3,21 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-react';
 import CartDrawer from '../cart/CartDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import SidebarDrawer from './SidebarDrawer';
 
 const Navbar: FC = () => {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [isCartOpen, setCartOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
-  // detect desktop (>=768px)
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const handleCartClick = () => {
     if (isDesktop) {
-      // Desktop: open drawer
       setCartOpen(true);
     } else {
-      // Mobile: navigate to full-page cart
       navigate('/cart');
     }
   };
@@ -28,7 +27,12 @@ const Navbar: FC = () => {
         <div className="px-4 py-2 flex items-center justify-between">
           {/* Left section */}
           <div className="flex items-center space-x-4">
-            <Menu size={24} className="cursor-pointer" />
+            {/* Sidebar toggle */}
+            <Menu
+              size={24}
+              className="cursor-pointer"
+              onClick={() => setSidebarOpen(true)}
+            />
             {/* Delivery/Pickup Toggle */}
             <div className="hidden sm:flex bg-gray-100 rounded-full p-1">
               {(['delivery', 'pickup'] as const).map((value) => (
@@ -76,7 +80,8 @@ const Navbar: FC = () => {
         </div>
       </nav>
 
-      {/* Slide-over Cart Drawer only for desktop */}
+      {/* Drawers */}
+      <SidebarDrawer isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CartDrawer isOpen={isCartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
