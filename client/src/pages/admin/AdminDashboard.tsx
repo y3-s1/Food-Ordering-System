@@ -89,8 +89,7 @@ export default function AdminDashboard() {
       {/* Main Body */}
       <main className="p-6 flex flex-col gap-8">
         
-        {/* Search Bar */}
-        <UserSearchBar onSearch={handleSearch} />
+        
 
         {/* Summary Cards */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -114,6 +113,7 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">All Users</h2>
           </div>
+          <UserSearchBar onSearch={handleSearch} /> {/* ✅ Search Bar Component */}
           <UserTable users={filteredUsers} onDelete={handleDelete} refresh={fetchUsers} />
         </section>
       </main>
