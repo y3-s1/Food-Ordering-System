@@ -11,6 +11,7 @@ import OrderModificationPage from './pages/order/OrderModificationPage';
 import Navbar from './components/common/NavBar';
 import Footer from './components/common/Footer';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import FoodItemModel from './components/cart/FoodItemModel';
 
 function App() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -34,6 +35,7 @@ function App() {
           path="/cart"
           element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
         />
+            <Route path="/cart/item" element={<FoodItemModel/>} />
           </Routes>
         <Footer/>
         </main>

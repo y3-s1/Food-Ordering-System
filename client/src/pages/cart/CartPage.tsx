@@ -21,7 +21,7 @@ const CartPage: React.FC = () => {
   useEffect(() => {
     if (isDesktop) {
       // If resized to desktop while on /cart, redirect back or close
-      navigate('/', { replace: true });
+      // navigate('/', { replace: true });
     }
   }, [isDesktop, navigate]);
 
