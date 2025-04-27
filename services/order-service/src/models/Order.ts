@@ -12,6 +12,7 @@ export interface IOrder extends Document {
   };
   totalPrice: number;
   status: string;
+  deliveryOption: 'Standard' | 'PickUp';
   deliveryAddress: {
     street: string;
     city: string;
@@ -20,6 +21,11 @@ export interface IOrder extends Document {
   };
   notes?: string;
   promotionCode?: string;
+  paymentMethod: 'Card' | 'Cash on Delivery';
+  location: {
+    lat: number;
+    lng: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +44,7 @@ const OrderSchema = new Schema<IOrder>({
     type: String,
     enum: [
       'PendingPayment',
+      'PaymentFail',
       'Confirmed',
       'Preparing',
       'OutForDelivery',
@@ -46,14 +53,30 @@ const OrderSchema = new Schema<IOrder>({
     ],
     default: 'PendingPayment'
   },
-  deliveryAddress: {
-    street:     String,
-    city:       String,
-    postalCode: String,
-    country:    String
+  deliveryOption: {
+    type: String,
+    enum: ['Standard', 'PickUp'],
+    default: 'Standard',
+    required: true
   },
-  notes:         String,
-  promotionCode: String
+  deliveryAddress: {
+    street:     { type: String },
+    city:       { type: String },
+    postalCode: { type: String },
+    country:    { type: String }
+  },
+  notes:         { type: String },
+  promotionCode: { type: String },
+  paymentMethod: {
+    type: String,
+    enum: ['Card', 'Cash on Delivery'],
+    default: 'Card',
+    required: true
+  },
+  location: {
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true }
+  }
 }, { timestamps: true });
 
 export default model<IOrder>('Order', OrderSchema);

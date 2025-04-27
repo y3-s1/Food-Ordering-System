@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder } from '../services/orderService';
+import { acceptOrder, cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder, rejectOrder, updateOrderStatus } from '../services/orderService';
 
 export const placeOrder = async (
   req: Request,
@@ -74,6 +74,48 @@ export const getStatus = async (
   try {
     const status = await getOrderStatus(req.params.orderId);
     res.json(status);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const acceptOrderController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { orderId } = req.params;
+    const restaurantId = (req as any).userId; // Assume userId from JWT is restaurantId
+    const order = await acceptOrder(orderId, restaurantId);
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const rejectOrderController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { orderId } = req.params;
+    const restaurantId = (req as any).userId;
+    const order = await rejectOrder(orderId, restaurantId);
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateStatusController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    if (!status) throw { status: 400, message: 'Missing status in body' };
+    const validStatuses = ['Preparing', 'OutForDelivery', 'Delivered'];
+    if (!validStatuses.includes(status)) {
+      throw { status: 400, message: 'Invalid status value' };
+    }
+    const order = await updateOrderStatus(orderId, status as any);
+    res.json(order);
   } catch (err) {
     next(err);
   }

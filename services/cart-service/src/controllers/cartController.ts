@@ -74,7 +74,7 @@ export const generateDraft = async (req: Request, res: Response, next: NextFunct
   try {
     const { userId, cartId } = getContext(req);
     // if (!userId) throw { status: 401, message: 'User must be authenticated to checkout' };
-    const draft = await cartService.generateDraft('test-user-id2', cartId);
+    const draft = await cartService.generateDraft('test-user-id3', cartId);
     res.json(draft);
   } catch (err) {
     next(err);
