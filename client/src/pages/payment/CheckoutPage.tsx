@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import paymentApi from "../../api/paymentApi"; // Should point to Payment API!
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import paymentApi from "../../api/paymentApi"; 
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -16,7 +22,7 @@ export default function CheckoutPage() {
     const createPaymentIntent = async () => {
       try {
         const res = await paymentApi.post("/payments/create-payment-intent", {
-          amount: 1000, // Amount in cents ($10.00) ✅
+          amount: 1000, // This means ₨10.00 if currency is LKR
         });
         setClientSecret(res.data.clientSecret);
       } catch (err) {
@@ -36,17 +42,17 @@ export default function CheckoutPage() {
 
     const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
-        card: elements.getElement(CardElement)!,
+        card: elements.getElement(CardNumberElement)!,
       },
     });
 
     if (result.error) {
       console.error(result.error);
       toast.error(result.error.message || "Payment failed");
-      navigate("/payment-failure"); // 🚀 Redirect to failure page
+      navigate("/payment-failure");
     } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
       toast.success("🎉 Payment Successful!");
-      navigate("/payment-success"); // 🚀 Redirect to success page
+      navigate("/payment-success");
     }
 
     setLoading(false);
@@ -58,13 +64,44 @@ export default function CheckoutPage() {
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Complete Payment</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <CardElement
-            className="border p-3 rounded-lg"
-            options={{
-              style: { base: { fontSize: "16px", color: "#32325d" } },
-            }}
-          />
 
+          {/* Card Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+            <div className="border p-3 rounded-lg">
+              <CardNumberElement
+                options={{
+                  style: { base: { fontSize: "16px", color: "#32325d" } },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Card Expiry */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+            <div className="border p-3 rounded-lg">
+              <CardExpiryElement
+                options={{
+                  style: { base: { fontSize: "16px", color: "#32325d" } },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Card CVC */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">CVC</label>
+            <div className="border p-3 rounded-lg">
+              <CardCvcElement
+                options={{
+                  style: { base: { fontSize: "16px", color: "#32325d" } },
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={!stripe || loading}
