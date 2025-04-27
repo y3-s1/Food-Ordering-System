@@ -9,6 +9,10 @@ export interface IDelivery extends Document {
     lat: number;
     lng: number;
   };
+  resLocation: {
+    lat: number;
+    lng: number;
+  };
   estimatedTime?: Date;
   completedAt?: Date;
   createdAt: Date;
@@ -36,6 +40,10 @@ const DeliverySchema: Schema = new Schema(
       default: 'PENDING',
     },
     location: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    resLocation: {
       lat: { type: Number },
       lng: { type: Number },
     },
