@@ -10,6 +10,14 @@ import { OrderConfirmationPage } from './pages/order/OrderConfirmationPage';
 import OrderModificationPage from './pages/order/OrderModificationPage';
 import Navbar from './components/common/NavBar';
 import Footer from './components/common/Footer';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import VerifyOtp from './pages/VerifyOtp';
+import PrivateRoute from './routes/PrivateRoute';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import StripeProvider from './stripe/StripeProvider';
+import CheckoutPage from './pages/payment/CheckoutPage';
 
 function App() {
   return (

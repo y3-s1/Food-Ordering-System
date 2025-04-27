@@ -20,7 +20,7 @@ services:
       - order-service
       - cart-service
       # - restaurant-service
-      # - user-service
+      - user-service
 
   delivery-service:
     build: ./services/delivery-service
