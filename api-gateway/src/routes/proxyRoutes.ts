@@ -30,7 +30,6 @@ router.use('/api/restaurants', createProxyMiddleware({
 router.use('/api/users', createProxyMiddleware({
   target: SERVICE_URLS.user,
   changeOrigin: true,
-  pathRewrite: { '^/api/users': '' }
 }));
 
 export default router;
