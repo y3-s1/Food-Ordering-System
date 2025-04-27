@@ -19,7 +19,7 @@ services:
       - delivery-service
       - order-service
       - cart-service
-      # - restaurant-service
+      - restaurant-service
       - user-service
 
   delivery-service:
@@ -52,15 +52,15 @@ services:
     depends_on:
       - mongo
 
-  # restaurant-service:
-  #   build: ./services/restaurant-service
-  #   container_name: restaurant-service
-  #   ports:
-  #     - "5001:5001"
-  #   env_file:
-  #     - ./services/restaurant-service/.env
-  #   depends_on:
-  #     - mongo
+  restaurant-service:
+    build: ./services/restaurant-service
+    container_name: restaurant-service
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./services/restaurant-service/.env
+    depends_on:
+      - mongo
 
   user-service:
     build: ./services/user-service
@@ -69,6 +69,16 @@ services:
       - "5004:5004"
     env_file:
       - ./services/user-service/.env
+    depends_on:
+      - mongo
+
+  payment-service:
+    build: ./services/payment-service
+    container_name: payment-service
+    ports:
+      - "5006:5006"
+    env_file:
+      - ./services/payment-service/.env
     depends_on:
       - mongo
 

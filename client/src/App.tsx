@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
 import { OrderFormPage } from './pages/order/OrderFormPage';
 import { OrderTrackingPage } from './pages/order/OrderTrackingPage';
@@ -10,6 +10,8 @@ import { OrderConfirmationPage } from './pages/order/OrderConfirmationPage';
 import OrderModificationPage from './pages/order/OrderModificationPage';
 import Navbar from './components/common/NavBar';
 import Footer from './components/common/Footer';
+import { useMediaQuery } from './hooks/useMediaQuery';
+import FoodItemModel from './components/cart/FoodItemModel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOtp from './pages/VerifyOtp';
@@ -20,6 +22,8 @@ import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
 
 function App() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
   return (
     <BrowserRouter>
       <div className="flex flex-col h-screen">
@@ -35,7 +39,11 @@ function App() {
             <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
             <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
             <Route path="/order/:orderId" element={<OrderDetailPage />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route
+          path="/cart"
+          element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
+        />
+            <Route path="/cart/item" element={<FoodItemModel/>} />
             
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
