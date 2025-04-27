@@ -1,30 +1,65 @@
-import { Request, Response } from 'express';
-import { createPaymentIntentService, handleWebhookEventService } from '../services/paymentService';
+import { Request, Response } from "express";
+import Payment from "../models/Payment";
+import Stripe from "stripe";
 
-// Create Payment Intent
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2022-11-15" });
+
+// Create PaymentIntent (already done previously)
 export const createPaymentIntent = async (req: Request, res: Response) => {
   const { amount } = req.body;
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: 'Invalid amount' });
+  if (!amount) {
+    return res.status(400).json({ error: "Amount is required" });
   }
 
-  const paymentIntent = await createPaymentIntentService(amount);
-  res.status(201).json({ clientSecret: paymentIntent.client_secret });
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount,
+    currency: "usd",
+    payment_method_types: ["card"],
+  });
+
+  res.send({ clientSecret: paymentIntent.client_secret });
 };
 
-// Handle Stripe Webhook Events
-export const handleWebhook = async (req: Request, res: Response) => {
-  const sig = req.headers['stripe-signature'] as string;
-  const payload = req.body; // Raw body for verification
+
+// Save Payment after Success
+export const savePayment = async (req: Request, res: Response) => {
+  try {
+    const { userId, email, amount, stripePaymentIntentId, status } = req.body;
+
+    const payment = await Payment.create({
+      userId,
+      email,
+      amount,
+      stripePaymentIntentId,
+      status,
+    });
+
+    res.status(201).json(payment);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to save payment" });
+  }
+};
+
+// Get User's Payment History
+export const getUserPayments = async (req: Request, res: Response) => {
+  const { userId } = req.params;
 
   try {
-    const event = await handleWebhookEventService(payload, sig);
-    console.log('✅ Stripe Event Received:', event.type);
+    const payments = await Payment.find({ userId }).sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch payment history" });
+  }
+};
 
-    res.json({ received: true });
-  } catch (error) {
-    console.error('❌ Webhook error:', error instanceof Error ? error.message : 'Unknown error');
-    res.status(400).send(`Webhook Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-}
+// Get All Payments (Admin)
+export const getAllPayments = async (_req: Request, res: Response) => {
+  try {
+    const payments = await Payment.find().sort({ createdAt: -1 });
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch all payments" });
+  }
 };

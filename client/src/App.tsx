@@ -12,6 +12,14 @@ import Navbar from './components/common/NavBar';
 import Footer from './components/common/Footer';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import FoodItemModel from './components/cart/FoodItemModel';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import VerifyOtp from './pages/VerifyOtp';
+import PrivateRoute from './routes/PrivateRoute';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import StripeProvider from './stripe/StripeProvider';
+import CheckoutPage from './pages/payment/CheckoutPage';
 
 function App() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -36,6 +44,13 @@ function App() {
           element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
         />
             <Route path="/cart/item" element={<FoodItemModel/>} />
+            
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+            <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
           </Routes>
         <Footer/>
         </main>
