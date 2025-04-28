@@ -41,14 +41,22 @@ const RestaurantOrderList: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  const updateStatus = async (orderId: string, status: string) => {
-    await fetch(`/api/orders/${orderId}/status`, {
+  const updateStatus = async (orderId: string, action: 'accept' | 'reject' | 'outForDelivery') => {
+    const base = `http://localhost:5002/api/v1/orders/${orderId}`;
+  
+    const url = action === 'outForDelivery'
+      ? `${base}/status`
+      : `${base}/${action}`;
+  
+    const options: RequestInit = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    // backend emits via socket
+      ...(action === 'outForDelivery' && { body: JSON.stringify({ status: 'OutForDelivery' }) })
+    };
+  
+    await fetch(url, options);
   };
+  
 
   const toggleExpand = (orderId: string) => {
     setExpandedId(prev => prev === orderId ? null : orderId);
@@ -58,10 +66,10 @@ const RestaurantOrderList: React.FC = () => {
     if (['PendingPayment', 'Confirmed'].includes(order.status)) {
       return (
         <>
-          <button onClick={() => updateStatus(order._id, 'Confirmed')} className="px-3 py-1 rounded-full border border-green-500 text-green-500 hover:bg-green-50 transition">
+          <button onClick={() => updateStatus(order._id, 'accept')} className="px-3 py-1 rounded-full border border-green-500 text-green-500 hover:bg-green-50 transition">
             <CheckIcon className="inline-block mr-1" size={16}/> Accept
           </button>
-          <button onClick={() => updateStatus(order._id, 'Cancelled')} className="px-3 py-1 rounded-full border border-red-500 text-red-500 hover:bg-red-50 transition">
+          <button onClick={() => updateStatus(order._id, 'reject')} className="px-3 py-1 rounded-full border border-red-500 text-red-500 hover:bg-red-50 transition">
             <XIcon className="inline-block mr-1" size={16}/> Reject
           </button>
         </>
@@ -69,7 +77,7 @@ const RestaurantOrderList: React.FC = () => {
     }
     if (order.status === 'Preparing') {
       return (
-        <button onClick={() => updateStatus(order._id, 'OutForDelivery')} className="px-3 py-1 rounded-full border border-yellow-500 text-yellow-500 hover:bg-yellow-50 transition">
+        <button onClick={() => updateStatus(order._id, 'outForDelivery')} className="px-3 py-1 rounded-full border border-yellow-500 text-yellow-500 hover:bg-yellow-50 transition">
           <TruckIcon className="inline-block mr-1" size={16}/> Out For Delivery
         </button>
       );

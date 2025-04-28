@@ -23,6 +23,7 @@ export default function Login() {
     try {
       const res = await userApi.post('/auth/login', data);
       login(res.data.user);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       toast.success("Login successful");
        // Redirect based on role
       if (res.data.user.isAdmin) {
