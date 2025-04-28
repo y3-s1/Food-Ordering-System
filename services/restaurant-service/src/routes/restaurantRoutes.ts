@@ -9,6 +9,7 @@ const router = express.Router();
 router.get('/', restaurantController.getAllRestaurants);
 router.get('/approved', restaurantController.getApprovedRestaurants);
 router.get('/pending', restaurantController.getPendingRestaurants);
+router.get('/nearby', restaurantController.findRestaurantsByLocation); // New endpoint for location search
 router.get('/:id', restaurantController.getRestaurantById);
 router.post('/', restaurantController.createRestaurant);
 router.put('/:id', restaurantController.updateRestaurant);
@@ -17,13 +18,12 @@ router.patch('/:id/toggle-availability', restaurantController.toggleAvailability
 router.patch('/:id/approve', restaurantController.approveRestaurant);
 router.patch('/:id/reject', restaurantController.rejectRestaurant);
 
-// Menu items routes remain unchanged
+// Menu items routes
 router.get('/:restaurantId/menu-items', menuItemController.getMenuItems);
 router.post('/:restaurantId/menu-items', menuItemController.createMenuItem);
 router.get('/:restaurantId/menu-items/:itemId', menuItemController.getMenuItemById);
 router.put('/:restaurantId/menu-items/:itemId', menuItemController.updateMenuItem);
 router.delete('/:restaurantId/menu-items/:itemId', menuItemController.deleteMenuItem);
 router.patch('/:restaurantId/menu-items/:itemId/toggle-availability', menuItemController.toggleItemAvailability);
-
 
 export default router;

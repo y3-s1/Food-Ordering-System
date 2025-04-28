@@ -26,8 +26,6 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
   }
 };
 
-
-
 // Get approved restaurants only (for customer view)
 export const getApprovedRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -41,16 +39,24 @@ export const getApprovedRestaurants = async (req: Request, res: Response): Promi
   }
 };
 
-
-
-
-// Update create method to ensure new registrations are pending
+// Create restaurant with location
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Validate location data
+    const { location } = req.body;
+    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') {
+      res.status(400).json({ 
+        message: 'Invalid location data. Both lat and lng must be numbers.',
+        received: location 
+      });
+      return;
+    }
+
     const newRestaurant = new Restaurant({
       ...req.body,
       approvalStatus: 'pending' // Ensure all new registrations are pending
     });
+    
     const savedRestaurant = await newRestaurant.save();
     res.status(201).json(savedRestaurant);
   } catch (error) {
@@ -64,11 +70,24 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 // Update restaurant
 export const updateRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Validate location data if it's being updated
+    if (req.body.location) {
+      const { location } = req.body;
+      if (typeof location.lat !== 'number' || typeof location.lng !== 'number') {
+        res.status(400).json({ 
+          message: 'Invalid location data. Both lat and lng must be numbers.',
+          received: location 
+        });
+        return;
+      }
+    }
+
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
+    
     if (!updatedRestaurant) {
       res.status(404).json({ message: 'Restaurant not found' });
       return;
@@ -113,8 +132,6 @@ export const toggleAvailability = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: 'Error toggling restaurant availability', error });
   }
 };
-
-
 
 // Get all pending restaurant registrations (for admin)
 export const getPendingRestaurants = async (req: Request, res: Response): Promise<void> => {
@@ -188,6 +205,47 @@ export const rejectRestaurant = async (req: Request, res: Response): Promise<voi
   } catch (error) {
     res.status(500).json({ 
       message: 'Error rejecting restaurant', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+// New endpoint to find restaurants by proximity
+export const findRestaurantsByLocation = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { lat, lng, radius = 5000 } = req.query; // radius in meters, default 5km
+    
+    if (!lat || !lng) {
+      res.status(400).json({ message: 'Latitude and longitude are required' });
+      return;
+    }
+    
+    const latitude = parseFloat(lat as string);
+    const longitude = parseFloat(lng as string);
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      res.status(400).json({ message: 'Invalid latitude or longitude values' });
+      return;
+    }
+    
+    // Find restaurants within the given radius
+    const restaurants = await Restaurant.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude] // GeoJSON format
+          },
+          $maxDistance: parseInt(radius as string)
+        }
+      },
+      approvalStatus: 'approved' // Only return approved restaurants
+    });
+    
+    res.status(200).json(restaurants);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error finding restaurants by location', 
       error: error instanceof Error ? error.message : String(error) 
     });
   }
