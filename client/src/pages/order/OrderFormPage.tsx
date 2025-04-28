@@ -35,8 +35,7 @@ export function OrderFormPage() {
     customerName:   draft?.customerName   || '',
     customerPhone:  draft?.customerPhone  || '',
     customerEmail:  draft?.customerEmail  || user?.email || '',
-    // restaurantId:   draft?.restaurantId   || '',
-    restaurantId:   '680b4f35b02ac7fdd10ed49d',
+    restaurantId:   draft?.restaurantId   || '',
     items:          draft
       ? draft.items.map(i => ({
           menuItemId: i.menuItemId,

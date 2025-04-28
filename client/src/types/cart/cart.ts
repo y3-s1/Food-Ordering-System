@@ -1,12 +1,10 @@
 export interface CartItem {
-    _id: string;
+    restaurantId: string;
     menuItemId: string;
     name: string;
-    imageUrl: string;
     quantity: number;
     unitPrice: number;
     notes?: string;
-    options?: string;
   }
   
   export interface Cart {
@@ -33,6 +31,7 @@ export interface CartItem {
       menuItemId: string;
       quantity: number;
       name: string,
+      imageUrl: string;
       unitPrice: number;
       notes?: string;
     }>;

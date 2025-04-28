@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MenuItem, Restaurant } from '../../types/restaurant/restaurant';
 import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/restaurantService';
-import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft } from '../../services/cart/cartService';
+import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft, addToCart } from '../../services/cart/cartService';
 import { Cart, CartItem } from '../../types/cart/cart';
 import CartDrawer from '../../components/cart/CartDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -28,9 +28,6 @@ const RestaurantUserDetailPage: React.FC = () => {
     total: 0,
   });
 
-  // detect desktop for responsive design
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-
   useEffect(() => {
     const loadData = async () => {
       if (!id) return;
@@ -38,16 +35,14 @@ const RestaurantUserDetailPage: React.FC = () => {
       try {
         setLoading(true);
         
-        const [restaurantData, menuItemsData, cartData] = await Promise.all([
+        const [restaurantData, menuItemsData] = await Promise.all([
           fetchRestaurantById(id),
           fetchMenuItems(id),
-          fetchCart() // Load cart data on initial load
         ]);
         
         setRestaurant(restaurantData);
         // Only show available menu items to customers
         setMenuItems(menuItemsData.filter(item => item.isAvailable));
-        setCart(cartData);
       } catch (err) {
         setError('Failed to load restaurant details. Please try again later.');
         console.error('Error loading restaurant details:', err);
@@ -82,16 +77,18 @@ const RestaurantUserDetailPage: React.FC = () => {
     }
   }, [navigate]);
 
-  const addToCart = useCallback((item: MenuItem) => {
+  const handleAddToCart = useCallback((item: MenuItem) => {
     // Prepare the item data according to the API requirements
     const cartItem = {
-      restaurantId: item.restaurantId, // Make sure MenuItem has this property
-      menuItemId: item._id,
-      name: item.name,
-      quantity: 1,
-      unitPrice: item.price,
-      notes: item.options || '' // Use options as notes or leave empty
+        restaurantId: item.restaurantId,
+        menuItemId:   item._id,
+        name:         item.name,
+        quantity:     1,
+        unitPrice:    item.price,
+        notes:        ''    // or item.notes if you want to carry options
     };
+
+    console.log('cartItem', cartItem)
     
     // Check if item already exists in cart
     const existingItem = cart.items.find(i => i.menuItemId === item._id);
@@ -102,21 +99,9 @@ const RestaurantUserDetailPage: React.FC = () => {
       handleUpdateQty(item._id, newQuantity);
     } else {
       // Add new item to cart through API
-      fetch('/api/cart/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cartItem)
-      })
+      addToCart(cartItem)
       .then(response => {
-        // Check if there's a new cart ID in the header
-        const newCartId = response.headers.get('X-Cart-Id');
-        if (newCartId) {
-          // Store the cart ID for future requests (e.g., in localStorage or cookie)
-          localStorage.setItem('cartId', newCartId);
-        }
-        return response.json();
+        return response;
       })
       .then(updatedCart => {
         setCart(updatedCart);
@@ -206,7 +191,7 @@ const RestaurantUserDetailPage: React.FC = () => {
               <p className="text-gray-600 mb-4">{restaurant.description}</p>
             </div>
             <button
-              onClick={() => setIsCartOpen(!isCartOpen)}
+              onClick={() => setCartOpen(!isCartOpen)}
               className="relative bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -339,7 +324,7 @@ const RestaurantUserDetailPage: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-800">LKR {item.price.toFixed(2)}</span>
                     <button
-                      onClick={() => addToCart(item)}
+                      onClick={() => handleAddToCart(item)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
