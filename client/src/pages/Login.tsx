@@ -22,15 +22,34 @@ export default function Login() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const res = await userApi.post('/auth/login', data);
-      login(res.data.user);
+      
+      const user = res.data.user;
+      
+      login(user); // Save user in context
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      
       toast.success("Login successful");
-       // Redirect based on role
-      if (res.data.user.isAdmin) {
-        navigate('/admin'); // Go to Admin Dashboard
+
+      // Redirect based on user role
+      if (user.isAdmin) {
+        navigate('/admin'); // Admin Dashboard
       } else {
-        navigate('/dashboard'); // Go to User Dashboard
+        switch (user.role) {
+          case 'customer':
+            navigate('/customer-dashboard');
+            break;
+          case 'restaurantOwner':
+            navigate('/restaurant-dashboard');
+            break;
+          case 'deliveryAgent':
+            navigate('/delivery-dashboard');
+            break;
+          default:
+            navigate('/dashboard'); // fallback if no role matches
+            break;
+        }
       }
+      
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Login failed");
     }
