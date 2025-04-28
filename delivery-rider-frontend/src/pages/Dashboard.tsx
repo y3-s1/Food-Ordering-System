@@ -137,6 +137,17 @@ const Dashboard = () => {
 
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
+    if (newStatus === 'OUT_FOR_DELIVERY') {
+      // Check if rider already has an active delivery
+      const alreadyOutForDelivery = deliveries.some(
+        (d) => d.status === 'OUT_FOR_DELIVERY'
+      );
+      if (alreadyOutForDelivery) {
+        toast.error('You already have an active delivery. Complete it first.');
+        return;
+      }
+    }
+  
     setUpdatingDeliveryId(id);
     const toastId = toast.loading(
       newStatus === 'DELIVERED'
@@ -146,7 +157,7 @@ const Dashboard = () => {
     try {
       await updateDeliveryStatus(id, newStatus);
       
-      await fetchData();
+      await fetchData(); // Refresh dashboard
   
       toast.success(
         newStatus === 'DELIVERED'
