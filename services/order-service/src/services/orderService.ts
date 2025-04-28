@@ -5,7 +5,7 @@ import Order, { IOrder } from '../models/Order';
 interface CreateOrderDTO {
   customerId: string;
   restaurantId: string;
-  items: { menuItemId: string; quantity: number; unitPrice: number }[];
+  items: { menuItemId: string; name: string; imageUrl: string; quantity: number; unitPrice: number }[];
   deliveryAddress: {
     street: string; city: string; postalCode: string; country: string;
   };
@@ -13,10 +13,10 @@ interface CreateOrderDTO {
   promotionCode?: string;
 }
 
-interface MenuItem { menuItemId: string; name: string; price: number }
+interface MenuItem { menuItemId: string; name: string; imageUrl: string; quantity: number; unitPrice: number }
 
 interface ModifyOrderDTO {
-  items?: { menuItemId: string; name: string; quantity: number; unitPrice: number }[];
+  items?: { menuItemId: string; name: string; imageUrl: string; quantity: number; unitPrice: number }[];
   notes?: string;
   promotionCode?: string;
 }
@@ -132,6 +132,7 @@ export async function modifySelectOrder(
     const enriched = dto.items.map(i => ({
       menuItemId: i.menuItemId,
       name:       i.name,
+      imageUrl: i.imageUrl,
       quantity:   i.quantity,
       unitPrice:  i.unitPrice
     }));

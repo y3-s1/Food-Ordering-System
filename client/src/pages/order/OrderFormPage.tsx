@@ -44,7 +44,7 @@ export function OrderFormPage() {
           quantity:   i.quantity,
           unitPrice:  i.unitPrice,
         }))
-      : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
+      : [{ menuItemId: '', name: '', imageUrl: '', quantity: 1, unitPrice: 0 }],
     deliveryOption: 'Standard',
     deliveryAddress: {
       street:      '',
@@ -125,7 +125,7 @@ export function OrderFormPage() {
   function addItem() {
     setForm(f => ({
       ...f,
-      items: [...f.items, { menuItemId: '', name: '', quantity: 1, unitPrice: 0 }]
+      items: [...f.items, { menuItemId: '', name: '', imageUrl: '', quantity: 1, unitPrice: 0 }]
     }));
   }
 
