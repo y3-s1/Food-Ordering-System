@@ -83,6 +83,7 @@ const RestaurantUserDetailPage: React.FC = () => {
         restaurantId: item.restaurantId,
         menuItemId:   item._id,
         name:         item.name,
+        imageUrl:     item.imageUrl,
         quantity:     1,
         unitPrice:    item.price,
         notes:        ''    // or item.notes if you want to carry options

@@ -40,6 +40,7 @@ export function OrderFormPage() {
       ? draft.items.map(i => ({
           menuItemId: i.menuItemId,
           name:       i.name,
+          imageUrl:   i.imageUrl,
           quantity:   i.quantity,
           unitPrice:  i.unitPrice,
         }))
@@ -420,7 +421,11 @@ export function OrderFormPage() {
                     <div className="flex items-start space-x-4">
                       {/* if you have thumbnails, swap this div for an <img> */}
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        📷
+                      <img 
+                          src={item.imageUrl || 'https://th.bing.com/th/id/OIP.3f4uw03GjHN2wa2tSeNc4wHaIu?rs=1&pid=ImgDetMain'} 
+                          alt={item.name} 
+                          className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"
+                        />
                       </div>
                       <div>
                         <p className="font-medium">{item.name || "Unnamed item"}</p>
