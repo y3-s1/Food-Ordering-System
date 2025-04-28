@@ -20,7 +20,7 @@ export const orderApi = axios.create({
 
 // Restaurant Service Axios
 export const restaurantApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/restaurants`,
+  baseURL: `${API_BASE_URL}/api/restaurants/api/restaurants`,
   headers: {
     'Content-Type': 'application/json',
   },

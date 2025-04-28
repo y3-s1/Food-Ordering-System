@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Delivery } from '../types/delivery';
 import { getDeliveriesByDriver, updateDeliveryStatus } from '../api/delivery';
 import { updateDriverLocation } from '../api/driver';
 import toast from 'react-hot-toast';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useRef } from 'react';
 import { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const mapRef = useRef<LeafletMap | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(15);
   const [distanceToDelivery, setDistanceToDelivery] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const driverId = '6604e71234567890abcdefa4'; // Temp
 
@@ -142,8 +144,8 @@ const Dashboard = () => {
         : 'Starting Delivery...'
     );
     try {
-      const updatedDelivery = await updateDeliveryStatus(id, newStatus);
-
+      await updateDeliveryStatus(id, newStatus);
+      
       await fetchData();
   
       toast.success(
@@ -221,16 +223,26 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 w-full">
         {deliveries.map((delivery) => (
           <div
             key={delivery._id}
-            className="bg-white p-4 rounded-lg shadow-md flex flex-col"
+            className="bg-white p-4 rounded-lg shadow-md flex flex-col cursor-pointer hover:shadow-lg transition relative w-full"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).tagName.toLowerCase() !== 'button') {
+                navigate(`/delivery/${delivery._id}`);
+              }
+            }}
           >
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold text-blue-700">
-                Delivery ID: {delivery._id}
-              </h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-blue-700">
+                  Delivery ID: 
+                </span>
+                <span className="text-xs font-medium text-blue-600">
+                  {delivery._id}
+                </span>
+              </div>
               <span
                 className={`text-sm px-2 py-1 rounded ${
                   delivery.status === 'DELIVERED'
@@ -243,15 +255,19 @@ const Dashboard = () => {
                 {delivery.status}
               </span>
             </div>
+
             <p className="text-gray-600">📍 {delivery.deliveryAddress}</p>
             <p className="text-gray-500 mt-1 text-sm">
               ETA: {new Date(delivery.estimatedTime).toLocaleTimeString()}
             </p>
-          
+
             <div className="mt-3 flex gap-2 transition-opacity duration-200">
               {delivery.status === 'ASSIGNED' && (
                 <button
-                  onClick={() => handleStatusUpdate(delivery._id, 'OUT_FOR_DELIVERY')}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click
+                    handleStatusUpdate(delivery._id, 'OUT_FOR_DELIVERY');
+                  }}
                   disabled={updatingDeliveryId === delivery._id}
                   className={`${
                     updatingDeliveryId === delivery._id ? 'opacity-50 cursor-not-allowed' : ''
@@ -263,9 +279,10 @@ const Dashboard = () => {
 
               {delivery.status === 'OUT_FOR_DELIVERY' && (
                 <button
-                  onClick={() =>
-                    setConfirmModal({ visible: true, deliveryId: delivery._id })
-                  }
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card click
+                    setConfirmModal({ visible: true, deliveryId: delivery._id });
+                  }}
                   disabled={updatingDeliveryId === delivery._id}
                   className={`${
                     updatingDeliveryId === delivery._id
