@@ -73,7 +73,7 @@ export async function getCart(
 export async function addItem(
   userId: string | undefined,
   cartId: string | undefined,
-  item: { restaurantId: string; menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string }
+  item: { restaurantId: string; menuItemId: string; name: string; imageUrl: string, quantity: number; unitPrice: number; notes?: string }
 ): Promise<ICart> {
   console.log('useriD-ADD', userId)
   const cart = await findOrCreateCart(userId, cartId);
@@ -197,6 +197,7 @@ export async function generateDraft(
     items: cart.items.map(i => ({
       menuItemId: i.menuItemId,
       name: i.name,
+      imageUrl: i.imageUrl,
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       notes: i.notes

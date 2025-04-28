@@ -55,8 +55,9 @@ function App() {
             <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
 
 
-            <Route path="/restaurants" element={<RestaurantList/>}/>
+            <Route path="/customer-dashboard" element={<RestaurantList/>}/>
             <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
+
           </Routes>
         <Footer/>
         </main>
