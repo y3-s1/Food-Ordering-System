@@ -114,6 +114,14 @@ export const acceptOrderController = async (req: Request, res: Response, next: N
     // const restaurantId = (req as any).userId; 
     const restaurantId = '680b4f35b02ac7fdd10ed49d'; 
     const order = await acceptOrder(orderId, restaurantId);
+
+    await axios.post('http://localhost:8081/api/deliveries/api/deliveries/', {
+      orderId: order._id,
+      deliveryAddress: order.deliveryAddress,
+      location: order.location,
+      restaurantId: order.restaurantId
+    });
+    
     io.emit('orderUpdated', order);
     res.json(order);
   } catch (err) {
