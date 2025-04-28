@@ -30,6 +30,20 @@ interface IRestaurant {
 
 
 
+// Haversine formula for calculating distance between two lat/lng points
+function getDistanceInKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Radius of Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+
+
 
 async function retryRequest<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
@@ -113,47 +127,86 @@ export const assignDriver: RequestHandler = async (req, res) => {
       return;
     }
 
-    const availableDriver = await DriverStatus.findOne({ isAvailable: true });
-    if (!availableDriver) {
-      res.status(400).json({ message: 'No drivers available' });
+    if (!delivery.resLocation) {
+      res.status(400).json({ message: 'Restaurant location missing in delivery.' });
       return;
     }
 
-    delivery.driverId = availableDriver.userId;
+    // Find all available drivers with currentLoad < 3
+    const availableDrivers = await DriverStatus.find({
+      isAvailable: true,
+      currentLoad: { $lt: 3 },
+    });
+
+    if (availableDrivers.length === 0) {
+      res.status(400).json({ message: 'No available drivers found.' });
+      return;
+    }
+
+    // Score each driver
+    const scoredDrivers = availableDrivers.map(driver => {
+      const distance = getDistanceInKm(
+        driver.currentLocation.lat,
+        driver.currentLocation.lng,
+        delivery.resLocation.lat,
+        delivery.resLocation.lng
+      );
+      const score = driver.currentLoad + distance; // Lower is better
+      return { driver, score };
+    });
+
+    // Find best driver (lowest score)
+    scoredDrivers.sort((a, b) => a.score - b.score);
+    const bestDriver = scoredDrivers[0].driver;
+
+    // Assign
+    delivery.driverId = bestDriver.userId;
     delivery.status = 'ASSIGNED';
     await delivery.save();
 
-    availableDriver.isAvailable = false;
-    await availableDriver.save();
+    // Increment driver's current load
+    bestDriver.currentLoad += 1;
+    await bestDriver.save();
 
     res.json(delivery);
   } catch (err) {
+    console.error('Error assigning driver:', err);
     res.status(500).json({ message: 'Failed to assign driver', error: err });
   }
 };
+
 
 // 3. Update delivery status
 export const updateStatus: RequestHandler = async (req, res) => {
   try {
     const { status } = req.body;
-    const delivery = await Delivery.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const delivery = await Delivery.findById(req.params.id);
 
-    if (status === 'DELIVERED' && delivery?.driverId) {
-      await DriverStatus.findOneAndUpdate(
-        { userId: delivery.driverId },
-        { isAvailable: true }
-      );
+    if (!delivery) {
+      res.status(404).json({ message: 'Delivery not found' });
+      return;
+    }
+
+    const oldStatus = delivery.status;
+    delivery.status = status;
+    await delivery.save();
+
+    // If status becomes "DELIVERED", decrease driver's load
+    if (status === 'DELIVERED' && delivery.driverId) {
+      const driver = await DriverStatus.findOne({ userId: delivery.driverId });
+      if (driver) {
+        driver.currentLoad = Math.max(0, driver.currentLoad - 1); // prevent negative load
+        await driver.save();
+      }
     }
 
     res.json(delivery);
   } catch (err) {
+    console.error('Error updating delivery status:', err);
     res.status(500).json({ message: 'Failed to update status', error: err });
   }
 };
+
 
 // 4. Get delivery by ID
 export const getDeliveryById: RequestHandler = async (req, res) => {
