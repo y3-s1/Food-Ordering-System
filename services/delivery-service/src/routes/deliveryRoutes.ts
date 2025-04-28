@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   createDelivery,
-  assignDriver,
   updateStatus,
   getDeliveryById,
   getAvailableDrivers,
@@ -14,7 +13,6 @@ const router = express.Router();
 
 // Delivery endpoints
 router.post('/', createDelivery);
-router.put('/:id/assign', assignDriver);
 router.put('/:id/status', updateStatus);
 router.get('/:id', getDeliveryById);
 router.get('/', getDeliveriesByDriver);
