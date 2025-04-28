@@ -1,6 +1,17 @@
-// controllers/restaurantController.ts
+// controllers/restaurantController.ts (updated)
 import { Request, Response } from 'express';
 import Restaurant, { IRestaurant } from '../models/restaurantModel';
+import mongoose from 'mongoose';
+
+// Custom Request interface with user info
+interface AuthRequest extends Request {
+  user?: {
+    _id: string;
+    email: string;
+    role: string;
+    isAdmin: boolean;
+  };
+}
 
 // Get all restaurants
 export const getAllRestaurants = async (req: Request, res: Response): Promise<void> => {
@@ -39,8 +50,8 @@ export const getApprovedRestaurants = async (req: Request, res: Response): Promi
   }
 };
 
-// Create restaurant with location
-export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Create restaurant with owner ID from authenticated user
+export const createRestaurant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Validate location data
     const { location } = req.body;
@@ -52,8 +63,16 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    // Check if user exists and is a restaurant owner
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized - User authentication required' });
+      return;
+    }
+
+    // Create new restaurant with owner ID
     const newRestaurant = new Restaurant({
       ...req.body,
+      ownerId: new mongoose.Types.ObjectId(req.user._id), // Set owner ID from authenticated user
       approvalStatus: 'pending' // Ensure all new registrations are pending
     });
     
@@ -67,8 +86,8 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
   }
 };
 
-// Update restaurant
-export const updateRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Update restaurant - verify owner or admin
+export const updateRestaurant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Validate location data if it's being updated
     if (req.body.location) {
@@ -82,42 +101,78 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       }
     }
 
+    // Find the restaurant
+    const restaurant = await Restaurant.findById(req.params.id);
+    
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+
+    // Check ownership unless admin
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to update this restaurant' });
+      return;
+    }
+
+    // Don't allow direct ownership transfer in updates
+    if (req.body.ownerId && !req.user?.isAdmin) {
+      delete req.body.ownerId;
+    }
+
+    // Don't allow status update unless admin
+    if (req.body.approvalStatus && !req.user?.isAdmin) {
+      delete req.body.approvalStatus;
+    }
+
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
     
-    if (!updatedRestaurant) {
-      res.status(404).json({ message: 'Restaurant not found' });
-      return;
-    }
     res.status(200).json(updatedRestaurant);
   } catch (error) {
     res.status(400).json({ message: 'Error updating restaurant', error });
   }
 };
 
-// Delete restaurant
-export const deleteRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Delete restaurant - verify owner or admin
+export const deleteRestaurant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const deletedRestaurant = await Restaurant.findByIdAndDelete(req.params.id);
-    if (!deletedRestaurant) {
+    // Find the restaurant first to check ownership
+    const restaurant = await Restaurant.findById(req.params.id);
+    
+    if (!restaurant) {
       res.status(404).json({ message: 'Restaurant not found' });
       return;
     }
+
+    // Check ownership unless admin
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to delete this restaurant' });
+      return;
+    }
+
+    await Restaurant.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Restaurant deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting restaurant', error });
   }
 };
 
-// Toggle restaurant availability
-export const toggleAvailability = async (req: Request, res: Response): Promise<void> => {
+// Toggle restaurant availability - owner or admin only
+export const toggleAvailability = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
       res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+    
+    // Check ownership unless admin
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to update this restaurant' });
       return;
     }
     
@@ -134,8 +189,14 @@ export const toggleAvailability = async (req: Request, res: Response): Promise<v
 };
 
 // Get all pending restaurant registrations (for admin)
-export const getPendingRestaurants = async (req: Request, res: Response): Promise<void> => {
+export const getPendingRestaurants = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Ensure user is admin
+    if (!req.user?.isAdmin) {
+      res.status(403).json({ message: 'Admin access required' });
+      return;
+    }
+
     const pendingRestaurants = await Restaurant.find({ approvalStatus: 'pending' });
     res.status(200).json(pendingRestaurants);
   } catch (error) {
@@ -146,9 +207,15 @@ export const getPendingRestaurants = async (req: Request, res: Response): Promis
   }
 };
 
-// Approve restaurant registration
-export const approveRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Approve restaurant registration - admin only
+export const approveRestaurant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Ensure user is admin
+    if (!req.user?.isAdmin) {
+      res.status(403).json({ message: 'Admin access required' });
+      return;
+    }
+
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
       res.status(404).json({ message: 'Restaurant not found' });
@@ -178,9 +245,15 @@ export const approveRestaurant = async (req: Request, res: Response): Promise<vo
   }
 };
 
-// Reject restaurant registration
-export const rejectRestaurant = async (req: Request, res: Response): Promise<void> => {
+// Reject restaurant registration - admin only
+export const rejectRestaurant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    // Ensure user is admin
+    if (!req.user?.isAdmin) {
+      res.status(403).json({ message: 'Admin access required' });
+      return;
+    }
+
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) {
       res.status(404).json({ message: 'Restaurant not found' });
@@ -210,7 +283,7 @@ export const rejectRestaurant = async (req: Request, res: Response): Promise<voi
   }
 };
 
-// New endpoint to find restaurants by proximity
+// Find restaurants by location
 export const findRestaurantsByLocation = async (req: Request, res: Response): Promise<void> => {
   try {
     const { lat, lng, radius = 5000 } = req.query; // radius in meters, default 5km
@@ -246,6 +319,24 @@ export const findRestaurantsByLocation = async (req: Request, res: Response): Pr
   } catch (error) {
     res.status(500).json({ 
       message: 'Error finding restaurants by location', 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
+};
+
+// Get restaurants owned by current user
+export const getMyRestaurants = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const restaurants = await Restaurant.find({ ownerId: req.user._id });
+    res.status(200).json(restaurants);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching your restaurants', 
       error: error instanceof Error ? error.message : String(error) 
     });
   }
