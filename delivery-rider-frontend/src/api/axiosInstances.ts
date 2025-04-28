@@ -12,7 +12,7 @@ export const deliveryApi = axios.create({
 
 // Order Service Axios
 export const orderApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/orders/api/v1`,
+  baseURL: `${API_BASE_URL}/api/orders/api/v1/orders`,
   headers: {
     'Content-Type': 'application/json',
   },
