@@ -14,18 +14,44 @@ export const placeOrder = async (
   }
 };
 
-export const getOrders = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const order = await getAllOrders();
-      res.json(order);
-    } catch (err) {
-      next(err);
-    }
-  };
+export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { restaurantId, userId, status } = req.query;
+    const statuses = typeof status === 'string' ? status.split(',') : undefined;
+    const orders = await getAllOrders(
+      typeof restaurantId === 'string' ? restaurantId : undefined,
+      typeof userId === 'string' ? userId : undefined,
+      statuses
+    );
+    res.json(orders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getUserOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.params.userId;
+    const statusQuery = req.query.status;
+    const statuses = typeof statusQuery === 'string' ? statusQuery.split(',') : undefined;
+    const orders = await getAllOrders(undefined, userId, statuses);
+    res.json(orders);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getRestaurantOrders = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const restaurantId = req.params.restaurantId;
+    const statusQuery = req.query.status;
+    const statuses = typeof statusQuery === 'string' ? statusQuery.split(',') : undefined;
+    const orders = await getAllOrders(restaurantId, undefined, statuses);
+    res.json(orders);
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const getOrder = async (
   req: Request,
@@ -82,7 +108,8 @@ export const getStatus = async (
 export const acceptOrderController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { orderId } = req.params;
-    const restaurantId = (req as any).userId; // Assume userId from JWT is restaurantId
+    // const restaurantId = (req as any).userId; 
+    const restaurantId = '680b4f35b02ac7fdd10ed49d'; 
     const order = await acceptOrder(orderId, restaurantId);
     res.json(order);
   } catch (err) {

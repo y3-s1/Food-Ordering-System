@@ -83,10 +83,16 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
   return order;
 }
 
-export async function getAllOrders(): Promise<IOrder[]> {
-  const orders = await Order.find().lean().exec();
-  if (!orders) throw { status: 404, message: 'Orders not found' };
-  return orders as IOrder[];
+export async function getAllOrders(
+  restaurantId?: string,
+  userId?: string,
+  statuses?: string[]
+): Promise<IOrder[]> {
+  const filter: any = {};
+  if (restaurantId) filter.restaurantId = restaurantId;
+  if (userId) filter.customerId = userId;
+  if (statuses && statuses.length) filter.status = { $in: statuses };
+  return await Order.find(filter).lean().exec() as IOrder[];
 }
 
 /**
@@ -229,10 +235,10 @@ export async function updateOrderStatus(
 
   // Validate allowed transitions
   const allowed: Record<string, string[]> = {
-    Confirmed: ['Preparing'],
-    Preparing: ['OutForDelivery'],
-    OutForDelivery: ['Delivered'],
-    PaymentPending: ['Confirmed' , 'PaymentFail'],
+    PendingPayment: ['Confirmed', 'PaymentFail'],
+    Confirmed:       ['Preparing'],
+    Preparing:       ['OutForDelivery'],
+    OutForDelivery:  ['Delivered'],
   };
 
   const current = order.status;
