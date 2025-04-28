@@ -20,6 +20,7 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
+import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 
 function App() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -39,6 +40,7 @@ function App() {
             <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
             <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
             <Route path="/order/:orderId" element={<OrderDetailPage />} />
+            <Route path="/restaurant/orders" element={<RestaurantOrderList />} />
             <Route
           path="/cart"
           element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}

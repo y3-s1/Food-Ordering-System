@@ -35,7 +35,8 @@ export function OrderFormPage() {
     customerName:   draft?.customerName   || '',
     customerPhone:  draft?.customerPhone  || '',
     customerEmail:  draft?.customerEmail  || user?.email || '',
-    restaurantId:   draft?.restaurantId   || '',
+    // restaurantId:   draft?.restaurantId   || '',
+    restaurantId:   '680b4f35b02ac7fdd10ed49d',
     items:          draft
       ? draft.items.map(i => ({
           menuItemId: i.menuItemId,
@@ -140,7 +141,7 @@ export function OrderFormPage() {
       navigate('/checkout', {
         state: {
           orderId,
-          amount: Math.round(total * 100), // e.g. LKR→paise
+          amount: Math.round(total * 100), 
         }
       });
     } else {
