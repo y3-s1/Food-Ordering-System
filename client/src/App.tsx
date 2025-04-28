@@ -11,7 +11,6 @@ import OrderModificationPage from './pages/order/OrderModificationPage';
 import Navbar from './components/common/NavBar';
 import Footer from './components/common/Footer';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import FoodItemModel from './components/cart/FoodItemModel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOtp from './pages/VerifyOtp';
@@ -21,6 +20,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
 import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
+import RestaurantList from './components/restaurant/RestaurantList';
+import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
 
 function App() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -52,6 +53,10 @@ function App() {
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
             <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
+
+
+            <Route path="/restaurants" element={<RestaurantList/>}/>
+            <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
           </Routes>
         <Footer/>
         </main>
