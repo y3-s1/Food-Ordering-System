@@ -3,21 +3,27 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  userId?: string;
+  userRole?: string;
 }
 
-export function authMiddleware(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) {
-  const header = req.headers.authorization;
-  if (!header) return res.status(401).json({ error: 'Missing auth header' });
-  const token = header.split(' ')[1];
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
+export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+  // Try to get authentication token from cookies
+  const token = req.cookies.token;
+
+  if (token) {
+    try {
+      // Verify and decode the JWT token
+      const payload = jwt.verify(token, JWT_SECRET) as any;
+      // Extract user information from payload
+      req.userId = payload._id;
+      req.userRole = payload.role; 
+      
+      return next();
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+  } else {
+    return res.status(401).json({ error: 'No credentials provided' });
   }
 }
