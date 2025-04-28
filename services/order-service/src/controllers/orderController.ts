@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
+import type { Server as SocketIOServer } from 'socket.io';
 import { acceptOrder, cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder, rejectOrder, updateOrderStatus } from '../services/orderService';
+import axios from 'axios';
 
 export const placeOrder = async (
   req: Request,
@@ -106,11 +108,13 @@ export const getStatus = async (
 };
 
 export const acceptOrderController = async (req: Request, res: Response, next: NextFunction) => {
+  const io = req.app.locals.io as SocketIOServer;
   try {
     const { orderId } = req.params;
     // const restaurantId = (req as any).userId; 
     const restaurantId = '680b4f35b02ac7fdd10ed49d'; 
     const order = await acceptOrder(orderId, restaurantId);
+    io.emit('orderUpdated', order);
     res.json(order);
   } catch (err) {
     next(err);
@@ -118,10 +122,12 @@ export const acceptOrderController = async (req: Request, res: Response, next: N
 };
 
 export const rejectOrderController = async (req: Request, res: Response, next: NextFunction) => {
+  const io = req.app.locals.io as SocketIOServer;
   try {
     const { orderId } = req.params;
     const restaurantId = (req as any).userId;
     const order = await rejectOrder(orderId, restaurantId);
+    io.emit('orderUpdated', order);
     res.json(order);
   } catch (err) {
     next(err);
@@ -133,6 +139,7 @@ export const updateStatusController = async (
   res: Response,
   next: NextFunction
 ) => {
+  const io = req.app.locals.io as SocketIOServer;
   try {
     const { orderId } = req.params;
     const { status } = req.body;
@@ -142,6 +149,7 @@ export const updateStatusController = async (
       throw { status: 400, message: 'Invalid status value' };
     }
     const order = await updateOrderStatus(orderId, status as any);
+    io.emit('orderUpdated', order);
     res.json(order);
   } catch (err) {
     next(err);
