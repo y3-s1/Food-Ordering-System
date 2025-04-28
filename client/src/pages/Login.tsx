@@ -22,9 +22,12 @@ export default function Login() {
   const onSubmit = async (data: LoginForm) => {
     try {
       const res = await userApi.post('/auth/login', data);
+      
       const user = res.data.user;
       
       login(user); // Save user in context
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      
       toast.success("Login successful");
 
       // Redirect based on user role

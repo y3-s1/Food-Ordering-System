@@ -1,12 +1,10 @@
 export interface CartItem {
-    _id: string;
+    restaurantId: string;
     menuItemId: string;
     name: string;
-    imageUrl: string;
     quantity: number;
     unitPrice: number;
     notes?: string;
-    options?: string;
   }
   
   export interface Cart {
@@ -27,11 +25,13 @@ export interface CartItem {
     customerId: string
     customerName: string
     customerPhone: string
+    customerEmail: string;
     restaurantId: string;
     items: Array<{
       menuItemId: string;
       quantity: number;
       name: string,
+      imageUrl: string;
       unitPrice: number;
       notes?: string;
     }>;
@@ -42,5 +42,6 @@ export interface CartItem {
       tax: number;
     };
     totalPrice: number;
+    notes: string;
   }
   

@@ -83,10 +83,16 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
   return order;
 }
 
-export async function getAllOrders(): Promise<IOrder[]> {
-  const orders = await Order.find().lean().exec();
-  if (!orders) throw { status: 404, message: 'Orders not found' };
-  return orders as IOrder[];
+export async function getAllOrders(
+  restaurantId?: string,
+  userId?: string,
+  statuses?: string[]
+): Promise<IOrder[]> {
+  const filter: any = {};
+  if (restaurantId) filter.restaurantId = restaurantId;
+  if (userId) filter.customerId = userId;
+  if (statuses && statuses.length) filter.status = { $in: statuses };
+  return await Order.find(filter).lean().exec() as IOrder[];
 }
 
 /**
@@ -187,4 +193,64 @@ export async function getOrderStatus(orderId: string) {
     updatedAt: order.updatedAt,
     totalPrice: order.totalPrice
   };
+}
+
+// Restaurant accepts an order
+export async function acceptOrder(orderId: string, restaurantId: string): Promise<IOrder> {
+  const order = await Order.findById(orderId);
+  if (!order) throw { status: 404, message: 'Order not found' };
+  if (order.restaurantId !== restaurantId) throw { status: 403, message: 'Unauthorized' };
+  if (order.status !== 'Confirmed') {
+    throw { status: 400, message: 'Only confirmed orders can be accepted' };
+  }
+  order.status = 'Preparing';
+  await order.save();
+  return order;
+}
+
+// Restaurant rejects an order
+export async function rejectOrder(orderId: string, restaurantId: string): Promise<IOrder> {
+  const order = await Order.findById(orderId);
+  if (!order) throw { status: 404, message: 'Order not found' };
+  if (order.restaurantId !== restaurantId) throw { status: 403, message: 'Unauthorized' };
+  if (order.status !== 'Confirmed') {
+    throw { status: 400, message: 'Only confirmed orders can be rejected' };
+  }
+  order.status = 'Cancelled';
+  await order.save();
+  // Optionally trigger refund here
+  return order;
+}
+
+
+/**
+ * Update order status (e.g., Preparing -> OutForDelivery -> Delivered)
+ */
+export async function updateOrderStatus(
+  orderId: string,
+  newStatus: 'Preparing' | 'OutForDelivery' | 'Delivered' | 'Confirmed' | 'PaymentFail'
+): Promise<IOrder> {
+  const order = await Order.findById(orderId);
+  if (!order) throw { status: 404, message: 'Order not found' };
+
+  // Validate allowed transitions
+  const allowed: Record<string, string[]> = {
+    PendingPayment: ['Confirmed', 'PaymentFail'],
+    Confirmed:       ['Preparing'],
+    Preparing:       ['OutForDelivery'],
+    OutForDelivery:  ['Delivered'],
+  };
+
+  const current = order.status;
+  const nextAllowed = allowed[current] || [];
+  if (!nextAllowed.includes(newStatus)) {
+    throw {
+      status: 400,
+      message: `Cannot change status from ${current} to ${newStatus}`
+    };
+  }
+
+  order.status = newStatus;
+  await order.save();
+  return order;
 }

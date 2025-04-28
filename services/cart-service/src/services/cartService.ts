@@ -1,3 +1,4 @@
+import { CartItem } from './../../../../client/src/types/cart/cart';
 /* services/cart-service/src/services/cartService.ts */
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,26 +9,35 @@ import { ICartItem } from '../models/CartItem';
 
 // Utility: recalculate subtotal, fees, total
 function recalcCart(cart: ICart) {
-  const itemsTotal = cart.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
+  const itemsTotal = cart.items.reduce((sum, i) => {
+    const qty = Number(i.quantity) || 0;
+    const price = Number(i.unitPrice) || 0;
+    return sum + qty * price;
+  }, 0);
+
+  console.log('itemsTotal', itemsTotal)
+
   const deliveryFee = 50;
   const serviceFee = 30;
   const tax = Math.round(itemsTotal * 0.05);
+
   cart.subtotal = itemsTotal;
   cart.fees = { deliveryFee, serviceFee, tax };
   cart.total = itemsTotal + deliveryFee + serviceFee + tax - (cart.discountAmount || 0);
 }
 
+
 // 1) Initialize or fetch existing cart
 export async function findOrCreateCart(
   userId?: string,
-  cartIdHeader?: string
+  cartId?: string
 ): Promise<ICart> {
   let cart: ICart | null = null;
   if (userId) {
     cart = await Cart.findOne({ userId }).exec();
   }
-  if (!cart && cartIdHeader) {
-    cart = await Cart.findOne({ cartId: cartIdHeader }).exec();
+  if (!cart && cartId) {
+    cart = await Cart.findOne({ cartId }).exec();
   }
   if (!cart) {
     cart = new Cart({
@@ -52,20 +62,28 @@ export async function findOrCreateCart(
 // 2) Get Cart
 export async function getCart(
   userId?: string,
-  cartIdHeader?: string
+  cartId?: string
 ): Promise<ICart> {
-  const cart = await findOrCreateCart(userId, cartIdHeader);
+  console.log('userId-get', userId)
+  const cart = await findOrCreateCart(userId, cartId);
   return cart;
 }
 
 // 3) Add or increment item
 export async function addItem(
   userId: string | undefined,
-  cartIdHeader: string | undefined,
+  cartId: string | undefined,
   item: { restaurantId: string; menuItemId: string; name: string; quantity: number; unitPrice: number; notes?: string }
 ): Promise<ICart> {
-  const cart = await findOrCreateCart(userId, cartIdHeader);
+  console.log('useriD-ADD', userId)
+  const cart = await findOrCreateCart(userId, cartId);
+  console.log('cart - 1', cart)
 
+  console.log('item manuID', item.menuItemId)
+
+  if (!cart.items.length) {
+    cart.userId = userId;
+  }
   // Single-restaurant constraint
   if (cart.items.length && cart.items[0].menuItemId && item.restaurantId) {
     // Could store restaurantId in Cart schema for clarity
@@ -83,19 +101,27 @@ export async function addItem(
 //     { timeout: 2000 }
 //   );
 
-  // Find existing item
+// Find existing item
+console.log('item - before cart - 4', item)
   const existing = cart.items.find(i => i.menuItemId === item.menuItemId);
   if (existing) {
+    console.log('item - before cart - 1', item)
     existing.quantity = Math.min(existing.quantity + item.quantity, MAX_QTY_PER_ITEM);
     if (item.notes !== undefined) existing.notes = item.notes;
   } else {
     if (item.quantity < 1 || item.quantity > MAX_QTY_PER_ITEM) {
       throw { status: 400, message: `Quantity must be between 1 and ${MAX_QTY_PER_ITEM}` };
     }
+    console.log('cart - 2', cart)
+    console.log('item - before cart - 2', item.menuItemId)
+    
     cart.items.push(item as ICartItem);
   }
+  console.log('item - before cart - 3', item)
+  console.log('cart - 4', cart.items[0])
 
   recalcCart(cart);
+  console.log('cart - 3', cart)
   await cart.save();
   return cart;
 }
@@ -159,10 +185,10 @@ export async function clearCart(
 
 // // 7) Generate Order Draft and publish
 export async function generateDraft(
-  userId: string,
-  cartIdHeader: string | undefined
+  userId: string | undefined,
+  cartId: string | undefined
 ): Promise<any> {
-  const cart = await findOrCreateCart(userId, cartIdHeader);
+  const cart = await findOrCreateCart(userId, cartId);
   if (!cart.items.length) throw { status: 400, message: 'Cart is empty' };
 
   const draft = {
@@ -179,6 +205,8 @@ export async function generateDraft(
     fees: cart.fees,
     totalPrice: cart.total
   };
+
+  console.log('draft', draft)
 
 //   await publish('cart.ready_for_order', draft);
   return draft;
