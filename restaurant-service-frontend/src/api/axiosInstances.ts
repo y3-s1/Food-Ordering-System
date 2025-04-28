@@ -20,7 +20,7 @@ export const orderApi = axios.create({
 
 // Restaurant Service Axios
 export const restaurantApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/restaurants/api/restaurants`,
+  baseURL: `http://localhost:5001/api/restaurants`,
   headers: {
     'Content-Type': 'application/json',
   },

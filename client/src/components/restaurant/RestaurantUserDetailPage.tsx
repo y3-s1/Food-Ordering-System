@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MenuItem, Restaurant } from '../../types/restaurant/restaurant';
 import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/restaurantService';
+import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft } from '../../services/cart/cartService';
+import { Cart, CartItem } from '../../types/cart/cart';
+import CartDrawer from '../../components/cart/CartDrawer';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import CartComponent from '../cart/Cart';
 
 const RestaurantUserDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,8 +17,19 @@ const RestaurantUserDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [cart, setCart] = useState<{item: MenuItem, quantity: number}[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartOpen, setCartOpen] = useState(false);
+
+  // Cart state with proper Cart type
+  const [cart, setCart] = useState<Cart>({
+    items: [],
+    discountAmount: 0,
+    subtotal: 0,
+    fees: { deliveryFee: 0, serviceFee: 0, tax: 0 },
+    total: 0,
+  });
+
+  // detect desktop for responsive design
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   useEffect(() => {
     const loadData = async () => {
@@ -22,14 +38,16 @@ const RestaurantUserDetailPage: React.FC = () => {
       try {
         setLoading(true);
         
-        const [restaurantData, menuItemsData] = await Promise.all([
+        const [restaurantData, menuItemsData, cartData] = await Promise.all([
           fetchRestaurantById(id),
-          fetchMenuItems(id)
+          fetchMenuItems(id),
+          fetchCart() // Load cart data on initial load
         ]);
         
         setRestaurant(restaurantData);
         // Only show available menu items to customers
         setMenuItems(menuItemsData.filter(item => item.isAvailable));
+        setCart(cartData);
       } catch (err) {
         setError('Failed to load restaurant details. Please try again later.');
         console.error('Error loading restaurant details:', err);
@@ -41,53 +59,82 @@ const RestaurantUserDetailPage: React.FC = () => {
     loadData();
   }, [id]);
 
-  const addToCart = (item: MenuItem) => {
-    setCart(prevCart => {
-      const existingItemIndex = prevCart.findIndex(cartItem => cartItem.item._id === item._id);
-      
-      if (existingItemIndex >= 0) {
-        // Item already in cart, increase quantity
-        const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex] = {
-          ...updatedCart[existingItemIndex],
-          quantity: updatedCart[existingItemIndex].quantity + 1
-        };
-        return updatedCart;
-      } else {
-        // Add new item to cart
-        return [...prevCart, { item, quantity: 1 }];
-      }
-    });
+  // Cart management functions
+  const handleUpdateQty = useCallback((itemId: string, qty: number) => {
+    if (qty < 1) return;
+    updateItemQuantity(itemId, qty).then(setCart);
+  }, []);
+
+  const handleRemoveItem = useCallback((itemId: string) => {
+    removeItem(itemId).then(setCart);
+  }, []);
+
+  const handleClearCart = useCallback(() => {
+    clearCart().then(setCart);
+  }, []);
+
+  const handlePlaceOrder = useCallback(async () => {
+    try {
+      const draft = await fetchDraft();
+      navigate('/order/new', { state: draft });
+    } catch (err) {
+      console.error('Error placing order:', err);
+    }
+  }, [navigate]);
+
+  const addToCart = useCallback((item: MenuItem) => {
+    // Prepare the item data according to the API requirements
+    const cartItem = {
+      restaurantId: item.restaurantId, // Make sure MenuItem has this property
+      menuItemId: item._id,
+      name: item.name,
+      quantity: 1,
+      unitPrice: item.price,
+      notes: item.options || '' // Use options as notes or leave empty
+    };
+    
+    // Check if item already exists in cart
+    const existingItem = cart.items.find(i => i.menuItemId === item._id);
+    
+    if (existingItem) {
+      // If item exists, just update its quantity
+      const newQuantity = existingItem.quantity + 1;
+      handleUpdateQty(item._id, newQuantity);
+    } else {
+      // Add new item to cart through API
+      fetch('/api/cart/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem)
+      })
+      .then(response => {
+        // Check if there's a new cart ID in the header
+        const newCartId = response.headers.get('X-Cart-Id');
+        if (newCartId) {
+          // Store the cart ID for future requests (e.g., in localStorage or cookie)
+          localStorage.setItem('cartId', newCartId);
+        }
+        return response.json();
+      })
+      .then(updatedCart => {
+        setCart(updatedCart);
+      })
+      .catch(error => {
+        console.error('Error adding item to cart:', error);
+      });
+    }
     
     // Show cart when item is added
-    setIsCartOpen(true);
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart(prevCart => prevCart.filter(cartItem => cartItem.item._id !== itemId));
-  };
-
-  const updateQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeFromCart(itemId);
-    } else {
-      setCart(prevCart => 
-        prevCart.map(cartItem => 
-          cartItem.item._id === itemId ? { ...cartItem, quantity: newQuantity } : cartItem
-        )
-      );
-    }
-  };
+    setCartOpen(true);
+  }, [cart.items, handleUpdateQty, setCart]);
 
   const categories = ['all', ...new Set(menuItems.map(item => item.category))];
   
   const filteredMenuItems = activeCategory === 'all' 
     ? menuItems 
     : menuItems.filter(item => item.category === activeCategory);
-
-  const cartTotal = cart.reduce((total, cartItem) => 
-    total + (cartItem.item.price * cartItem.quantity), 0
-  );
 
   if (loading) {
     return (
@@ -165,10 +212,10 @@ const RestaurantUserDetailPage: React.FC = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
-              Cart ({cart.reduce((total, item) => total + item.quantity, 0)})
-              {cart.length > 0 && (
+              Cart ({cart.items.reduce((total, item) => total + item.quantity, 0)})
+              {cart.items.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.length}
+                  {cart.items.length}
                 </span>
               )}
             </button>
@@ -290,7 +337,7 @@ const RestaurantUserDetailPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-1">{item.name}</h3>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-gray-800">${item.price.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-gray-800">LKR {item.price.toFixed(2)}</span>
                     <button
                       onClick={() => addToCart(item)}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center"
@@ -308,128 +355,8 @@ const RestaurantUserDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* Shopping Cart Slide-out */}
-      <div className={`fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-lg transform ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out z-50`}>
-        <div className="h-full flex flex-col">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-800">Your Cart</h2>
-            <button 
-              onClick={() => setIsCartOpen(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4">
-            {cart.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <p className="text-gray-500">Your cart is empty</p>
-                <button 
-                  onClick={() => setIsCartOpen(false)}
-                  className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Browse Menu
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {cart.map((cartItem) => (
-                  <div key={cartItem.item._id} className="flex border-b border-gray-100 pb-4">
-                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                      {cartItem.item.imageUrl ? (
-                        <img
-                          src={cartItem.item.imageUrl}
-                          alt={cartItem.item.name}
-                          className="h-full w-full object-cover object-center"
-                        />
-                      ) : (
-                        <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">No Image</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="ml-4 flex flex-1 flex-col">
-                      <div>
-                        <div className="flex justify-between text-base font-medium text-gray-900">
-                          <h3>{cartItem.item.name}</h3>
-                          <p className="ml-4">${(cartItem.item.price * cartItem.quantity).toFixed(2)}</p>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500 line-clamp-1">{cartItem.item.category}</p>
-                      </div>
-                      
-                      <div className="flex flex-1 items-end justify-between text-sm">
-                        <div className="flex items-center border border-gray-300 rounded-md">
-                          <button 
-                            onClick={() => updateQuantity(cartItem.item._id, cartItem.quantity - 1)}
-                            className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                          >
-                            -
-                          </button>
-                          <span className="px-2 py-1 text-gray-800">{cartItem.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(cartItem.item._id, cartItem.quantity + 1)}
-                            className="px-2 py-1 text-gray-600 hover:bg-gray-100"
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => removeFromCart(cartItem.item._id)}
-                          className="font-medium text-red-600 hover:text-red-500"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {cart.length > 0 && (
-            <div className="border-t border-gray-200 p-4 space-y-4">
-              <div className="flex justify-between text-base font-medium text-gray-900">
-                <p>Subtotal</p>
-                <p>${cartTotal.toFixed(2)}</p>
-              </div>
-              <p className="text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
-              <button
-                className="w-full bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md py-3 px-4 text-base font-medium text-white"
-                onClick={() => navigate('/checkout', { state: { cart, restaurantId: id } })}
-              >
-                Checkout
-              </button>
-              <div className="flex justify-center text-sm text-gray-500">
-                <button
-                  type="button"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                  onClick={() => setIsCartOpen(false)}
-                >
-                  Continue Shopping
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Backdrop for cart */}
-      {isCartOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsCartOpen(false)}
-        ></div>
-      )}
+      {/* Cart integration - show CartComponent directly for desktop, CartDrawer for mobile */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 };

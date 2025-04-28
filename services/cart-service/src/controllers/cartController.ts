@@ -6,7 +6,9 @@ import * as cartService from '../services/cartService';
 function getContext(req: Request) {
   const userId = (req as any).userId as string | undefined;
   const cartId = (req as any).cartId as string | undefined;
-  return { userId, cartId };
+  const userRole = (req as any).userRole as string | undefined;
+  
+  return { userId, cartId, userRole };
 }
 
 export const getCart = async (req: Request, res: Response, next: NextFunction) => {

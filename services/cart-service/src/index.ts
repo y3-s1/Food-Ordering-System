@@ -1,3 +1,4 @@
+import { cookieParser } from 'cookie-parser';
 import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db';
@@ -11,6 +12,7 @@ async function bootstrap() {
 //   await connectBroker();
 
   const app = express();
+  app.use(cookieParser());
   app.use(cors());
   app.use(express.json());
 
