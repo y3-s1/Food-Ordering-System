@@ -2,6 +2,10 @@ export interface Restaurant {
   _id: string;
   name: string;
   description: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
   address: string;
   contactNumber: string;
   email: string;

@@ -53,6 +53,17 @@ export const rejectRestaurant = async (id: string): Promise<Restaurant> => {
   return response.data;
 };
 
+// New function to fetch restaurants by location
+export const findNearbyRestaurants = async (lat: number, lng: number, radius?: number): Promise<Restaurant[]> => {
+  const params = new URLSearchParams();
+  params.append('lat', lat.toString());
+  params.append('lng', lng.toString());
+  if (radius) params.append('radius', radius.toString());
+  
+  const response = await restaurantApi.get(`/nearby?${params.toString()}`);
+  return response.data;
+};
+
 // Menu Item API calls
 export const fetchMenuItems = async (restaurantId: string): Promise<MenuItem[]> => {
   const response = await restaurantApi.get(`/${restaurantId}/menu-items`);
