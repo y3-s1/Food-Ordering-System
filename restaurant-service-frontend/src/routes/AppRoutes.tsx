@@ -6,6 +6,7 @@ import EditRestaurant from '../pages/EditRestaurant';
 import ManageMenu from '../pages/ManageMenu';
 import { useAuth } from '../auth/AuthContext';
 import Navbar from '../components/shared/Navbar';
+import Footer from '../components/shared/Footer';
 
 export default function AppRoutes() {
   const { user, loading } = useAuth();
@@ -24,6 +25,7 @@ export default function AppRoutes() {
         <Route path="/edit-restaurant/:id" element={isRestaurantOwner ? <EditRestaurant /> : <Navigate to="/" />} />
         <Route path="/manage-menu/:id" element={isRestaurantOwner ? <ManageMenu /> : <Navigate to="/" />} />
       </Routes>
+      <Footer/>
     </Router>
   );
 }
