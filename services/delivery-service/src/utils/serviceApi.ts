@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiGatewayBaseUrl = process.env.API_GATEWAY_URL || 'http://localhost:8081';
+const apiGatewayBaseUrl = process.env.API_GATEWAY_URL || 'http://api-gateway:8081';
 
 // Create a reusable Axios config
 const axiosConfig = {

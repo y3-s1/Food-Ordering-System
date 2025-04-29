@@ -10,6 +10,7 @@ import { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import { calculateDistance } from '../utils/geo';
 import NavigateButton from '../components/NavigateButton';
+import RiderStatusToggle from '../components/RiderStatusToggle';
 
 
 const Dashboard = () => {
@@ -23,8 +24,9 @@ const Dashboard = () => {
   const [zoomLevel, setZoomLevel] = useState<number>(15);
   const [distanceToDelivery, setDistanceToDelivery] = useState<number | null>(null);
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(true);
 
-  const driverId = '6604e71234567890abcdefa4'; // Temp
+  const driverId = '6604e71234567890abcdefab'; // Temp
 
   const [confirmModal, setConfirmModal] = useState<{
     visible: boolean;
@@ -135,8 +137,26 @@ const Dashboard = () => {
   
 
 
+  const hasActiveDeliveries = deliveries.some(
+    (d) => d.status === 'ASSIGNED' || d.status === 'OUT_FOR_DELIVERY'
+  );
+
+  const visibleDeliveries = isOnline
+  ? deliveries
+  : deliveries.filter((d) => d.status === 'DELIVERED');
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
+    if (newStatus === 'OUT_FOR_DELIVERY') {
+      // Check if rider already has an active delivery
+      const alreadyOutForDelivery = deliveries.some(
+        (d) => d.status === 'OUT_FOR_DELIVERY'
+      );
+      if (alreadyOutForDelivery) {
+        toast.error('You already have an active delivery. Complete it first.');
+        return;
+      }
+    }
+  
     setUpdatingDeliveryId(id);
     const toastId = toast.loading(
       newStatus === 'DELIVERED'
@@ -146,7 +166,7 @@ const Dashboard = () => {
     try {
       await updateDeliveryStatus(id, newStatus);
       
-      await fetchData();
+      await fetchData(); // Refresh dashboard
   
       toast.success(
         newStatus === 'DELIVERED'
@@ -170,8 +190,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+      <h1 className="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-2">
         🚚 Delivery Dashboard
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isOnline ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          {isOnline ? 'ONLINE' : 'OFFLINE'}
+        </span>
       </h1>
 
       {locationError && (
@@ -179,6 +202,14 @@ const Dashboard = () => {
           {locationError}
         </div>
       )}
+
+      {/* RiderStatusToggle*/}
+      <RiderStatusToggle
+        isOnline={isOnline}
+        setIsOnline={setIsOnline}
+        hasActiveDeliveries={hasActiveDeliveries}
+        driverId={driverId}
+      />
 
       {currentPosition && (
         <div className="h-64 w-full mb-6">
@@ -224,7 +255,7 @@ const Dashboard = () => {
       )}
 
       <div className="grid gap-4 w-full">
-        {deliveries.map((delivery) => (
+        {visibleDeliveries.map((delivery) => (
           <div
             key={delivery._id}
             className="bg-white p-4 rounded-lg shadow-md flex flex-col cursor-pointer hover:shadow-lg transition relative w-full"
@@ -297,7 +328,7 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
-      <NavigateButton currentPosition={currentPosition} deliveries={deliveries} />
+      {isOnline && <NavigateButton currentPosition={currentPosition} deliveries={deliveries} />}
         {confirmModal.visible && (
           <div className="fixed inset-0 backdrop-blur-xs bg-black/10 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-md w-80 animate-fadeIn">

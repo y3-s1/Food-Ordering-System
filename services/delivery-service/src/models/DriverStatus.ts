@@ -7,6 +7,7 @@ export interface IDriverStatus extends Document {
     lat: number;
     lng: number;
   };
+  currentLoad: number;
 }
 
 const DriverStatusSchema: Schema = new Schema({
@@ -23,6 +24,10 @@ const DriverStatusSchema: Schema = new Schema({
   currentLocation: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true }
+  },
+  currentLoad: {
+    type: Number,
+    default: 0,
   }
 });
 

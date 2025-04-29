@@ -115,24 +115,6 @@ export default function Login() {
             href="http://localhost:5004/api/auth/google"
             className="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition"
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path
-                fill="#fff"
-                d="M24 9.5c3.5 0 6.5 1.3 8.9 3.4l6.6-6.6C35.1 2.3 29.9 0 24 0 14.8 0 6.9 5.7 3 13.9l7.7 6c2.2-6.5 8.3-10.4 13.3-10.4z"
-              />
-              <path
-                fill="#fff"
-                d="M46.1 24.5c0-1.5-.1-3-.3-4.5H24v9h12.4c-.5 3-2.2 5.5-4.6 7.2l7.2 5.6c4.2-3.9 6.6-9.7 6.6-17.3z"
-              />
-              <path
-                fill="#fff"
-                d="M10.7 28.4C9.9 26.2 9.5 23.7 9.5 21s.4-5.2 1.2-7.4L3 7.7C1.1 11.1 0 15.3 0 20c0 4.6 1.1 8.9 3.1 12.3l7.6-5.9z"
-              />
-              <path
-                fill="#fff"
-                d="M24 48c6.5 0 12-2.1 16-5.8l-7.6-5.9c-2.1 1.5-4.8 2.3-8.4 2.3-5 0-10.7-3.8-13.1-10.4l-7.7 6C6.9 42.3 14.8 48 24 48z"
-              />
-            </svg>
             Continue with Google
           </a>
         </div>

@@ -4,7 +4,7 @@ export interface IDelivery extends Document {
   orderId: mongoose.Types.ObjectId;
   driverId: mongoose.Types.ObjectId | null;
   deliveryAddress: string;
-  status: 'PENDING' | 'ASSIGNED' | 'OUT_FOR_DELIVERY' | 'DELIVERED';
+  status: 'PENDING' | 'ASSIGNED' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED_TO_ASSIGN';
   location: {
     lat: number;
     lng: number;
@@ -17,6 +17,7 @@ export interface IDelivery extends Document {
   completedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  retryCount: number;
 }
 
 const DeliverySchema: Schema = new Schema(
@@ -36,7 +37,7 @@ const DeliverySchema: Schema = new Schema(
     },
     status: {
       type: String,
-      enum: ['PENDING', 'ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED'],
+      enum: ['PENDING', 'ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED_TO_ASSIGN'],
       default: 'PENDING',
     },
     location: {
@@ -52,6 +53,10 @@ const DeliverySchema: Schema = new Schema(
     },
     completedAt: {
       type: Date,
+    },
+    retryCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
