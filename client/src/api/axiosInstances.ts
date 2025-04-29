@@ -12,17 +12,23 @@ export const deliveryApi = axios.create({
 
 // Order Service Axios
 export const orderApi = axios.create({
-//   baseURL: `${API_BASE_URL}/api/orders/api/v1`,
-  baseURL: `${API_BASE_URL}/api/v1/orders`,
+  baseURL: `${API_BASE_URL}/api/orders/api/v1/orders`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+export const cartApi = axios.create({
+    baseURL: `${API_BASE_URL}/api/cart/api/v1/cart`,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
 // Restaurant Service Axios
 export const restaurantApi = axios.create({
-  // baseURL: `${API_BASE_URL}/api/restaurants`,
-  baseURL: `http://localhost:5001/api/restaurants`,
+  baseURL: `${API_BASE_URL}/api/restaurants/api/restaurants`,
   headers: {
     'Content-Type': 'application/json',
   },

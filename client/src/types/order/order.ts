@@ -1,6 +1,7 @@
 export interface OrderItemDTO {
   menuItemId: string;
   name:       string;
+  imageUrl: string;
   quantity:   number;
   unitPrice:  number;
 }
