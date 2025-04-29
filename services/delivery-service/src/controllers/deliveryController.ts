@@ -3,6 +3,7 @@ import Delivery from '../models/Delivery';
 import DriverStatus from '../models/DriverStatus';
 import mongoose from 'mongoose';
 import { orderServiceApi, restaurantServiceApi } from '../utils/serviceApi';
+import { assignDriverToDelivery } from '../utils/assignDriver';
 
 
 // Typing for Order object
@@ -31,6 +32,8 @@ interface IRestaurant {
 
 
 
+
+
 async function retryRequest<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
   try {
     return await fn();
@@ -48,7 +51,7 @@ async function retryRequest<T>(fn: () => Promise<T>, retries = 3, delay = 1000):
 // 1. Create a delivery
 export const createDelivery: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const { orderId } = req.body;
+    const { orderId } = req.body; 
 
     if (!orderId) {
       res.status(400).json({ message: 'orderId is required' });
@@ -95,7 +98,17 @@ export const createDelivery: RequestHandler = async (req, res): Promise<void> =>
       },
     });
 
+    console.log(`Delivery ${delivery._id} created successfully.`);
+
+    // Auto-assign driver using helper
+    try {
+      await assignDriverToDelivery(delivery);
+    } catch (assignError) {
+      console.error('Error auto-assigning driver:', assignError);
+    }
+
     res.status(201).json(delivery);
+
   } catch (err) {
     console.error('Error creating delivery:', err);
     res.status(500).json({ message: 'Failed to create delivery', error: err });
@@ -104,56 +117,37 @@ export const createDelivery: RequestHandler = async (req, res): Promise<void> =>
 
 
 
-// 2. Assign driver (auto from available drivers)
-export const assignDriver: RequestHandler = async (req, res) => {
+// 3. Update delivery status
+export const updateStatus: RequestHandler = async (req, res) => {
   try {
+    const { status } = req.body;
     const delivery = await Delivery.findById(req.params.id);
+
     if (!delivery) {
       res.status(404).json({ message: 'Delivery not found' });
       return;
     }
 
-    const availableDriver = await DriverStatus.findOne({ isAvailable: true });
-    if (!availableDriver) {
-      res.status(400).json({ message: 'No drivers available' });
-      return;
-    }
-
-    delivery.driverId = availableDriver.userId;
-    delivery.status = 'ASSIGNED';
+    const oldStatus = delivery.status;
+    delivery.status = status;
     await delivery.save();
 
-    availableDriver.isAvailable = false;
-    await availableDriver.save();
-
-    res.json(delivery);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to assign driver', error: err });
-  }
-};
-
-// 3. Update delivery status
-export const updateStatus: RequestHandler = async (req, res) => {
-  try {
-    const { status } = req.body;
-    const delivery = await Delivery.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-
-    if (status === 'DELIVERED' && delivery?.driverId) {
-      await DriverStatus.findOneAndUpdate(
-        { userId: delivery.driverId },
-        { isAvailable: true }
-      );
+    // If status becomes "DELIVERED", decrease driver's load
+    if (status === 'DELIVERED' && delivery.driverId) {
+      const driver = await DriverStatus.findOne({ userId: delivery.driverId });
+      if (driver) {
+        driver.currentLoad = Math.max(0, driver.currentLoad - 1); // prevent negative load
+        await driver.save();
+      }
     }
 
     res.json(delivery);
   } catch (err) {
+    console.error('Error updating delivery status:', err);
     res.status(500).json({ message: 'Failed to update status', error: err });
   }
 };
+
 
 // 4. Get delivery by ID
 export const getDeliveryById: RequestHandler = async (req, res) => {
@@ -239,5 +233,48 @@ export const getDeliveriesByDriver: RequestHandler = async (req, res) => {
     res.json(deliveries);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch deliveries by driver', error: err });
+  }
+};
+
+
+// 9. Toggle driver's online/offline status
+export const updateDriverAvailability: RequestHandler = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== 'boolean') {
+      res.status(400).json({ message: 'isAvailable must be a boolean' });
+      return;
+    }
+
+    const driver = await DriverStatus.findOne({ userId });
+
+    if (!driver) {
+      res.status(404).json({ message: 'Driver not found' });
+      return;
+    }
+
+    // Prevent going offline if there are active deliveries
+    if (
+      !isAvailable &&
+      (await Delivery.findOne({
+        driverId: userId,
+        status: { $in: ['ASSIGNED', 'OUT_FOR_DELIVERY'] }
+      }))
+    ) {
+      res.status(400).json({
+        message: 'Cannot go offline with active deliveries',
+      });
+      return;
+    }
+
+    driver.isAvailable = isAvailable;
+    await driver.save();
+
+    res.json({ message: `Driver is now ${isAvailable ? 'online' : 'offline'}` });
+  } catch (err) {
+    console.error('Failed to update driver availability:', err);
+    res.status(500).json({ message: 'Failed to update driver status', error: err });
   }
 };
