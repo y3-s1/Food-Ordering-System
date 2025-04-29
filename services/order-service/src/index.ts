@@ -21,15 +21,17 @@ async function bootstrap() {
 
   const app = express();
   
-  // Fix 1: Make sure CLIENT_ORIGIN doesn't have a trailing slash
-  const origin = CLIENT_ORIGIN.endsWith('/') 
-    ? CLIENT_ORIGIN.slice(0, -1) 
-    : CLIENT_ORIGIN;
-  
-  app.use(cors({ 
-    origin,
+  const raw = process.env.CLIENT_ORIGIN || '';
+  const allowedOrigins = raw
+    .split(',')
+    .map(o => o.trim())               
+    .filter(o => !!o)                  
+    .map(o => o.endsWith('/') ? o.slice(0, -1) : o); 
+
+  app.use(cors({
+    origin: allowedOrigins,
     credentials: true,
-   }));
+  }));
 
   app.use(json());
   app.use(cookieParser());
@@ -42,7 +44,7 @@ async function bootstrap() {
   // Fix 2: Use the same origin value for Socket.IO CORS
   io = new SocketIOServer(server, { 
     cors: { 
-      origin,
+      origin: allowedOrigins,
       methods: ["GET", "POST", "PUT", "DELETE"],
       credentials: true
     } 

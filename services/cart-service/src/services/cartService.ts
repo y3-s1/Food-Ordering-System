@@ -1,13 +1,10 @@
-import { CartItem } from './../../../../client/src/types/cart/cart';
-/* services/cart-service/src/services/cartService.ts */
-import axios from 'axios';
+
 import { v4 as uuidv4 } from 'uuid';
 import Cart, { ICart } from '../models/Cart';
 import { MAX_QTY_PER_ITEM } from '../config';
 import { ICartItem } from '../models/CartItem';
-// import { publish } from '../config/broker';
 
-// Utility: recalculate subtotal, fees, total
+//  recalculate subtotal, fees, total
 function recalcCart(cart: ICart) {
   const itemsTotal = cart.items.reduce((sum, i) => {
     const qty = Number(i.quantity) || 0;
@@ -27,7 +24,7 @@ function recalcCart(cart: ICart) {
 }
 
 
-// 1) Initialize or fetch existing cart
+// Initialize or fetch existing cart
 export async function findOrCreateCart(
   userId?: string,
   cartId?: string
@@ -51,7 +48,6 @@ export async function findOrCreateCart(
       total: 0
     });
   } else if (userId && !cart.userId) {
-    // associate guest cart to user
     cart.userId = userId;
   }
   recalcCart(cart);
@@ -59,7 +55,7 @@ export async function findOrCreateCart(
   return cart;
 }
 
-// 2) Get Cart
+// Get Cart
 export async function getCart(
   userId?: string,
   cartId?: string
@@ -69,64 +65,41 @@ export async function getCart(
   return cart;
 }
 
-// 3) Add or increment item
+// Add or increment item
 export async function addItem(
   userId: string | undefined,
   cartId: string | undefined,
   item: { restaurantId: string; menuItemId: string; name: string; imageUrl: string, quantity: number; unitPrice: number; notes?: string }
 ): Promise<ICart> {
-  console.log('useriD-ADD', userId)
   const cart = await findOrCreateCart(userId, cartId);
-  console.log('cart - 1', cart)
-
-  console.log('item manuID', item.menuItemId)
 
   if (!cart.items.length) {
     cart.userId = userId;
   }
-  // Single-restaurant constraint
   if (cart.items.length && cart.items[0].menuItemId && item.restaurantId) {
-    // Could store restaurantId in Cart schema for clarity
     const existingRestaurant = cart.items[0].restaurantId;
     if (existingRestaurant && existingRestaurant !== item.restaurantId) {
       throw { status: 409, message: 'Cart contains items from another restaurant' };
     }
   }
 
-  // Validate item availability via Restaurant Service
-  //########################################################################################################################################
-//   await axios.post(
-//     `${process.env.RESTAURANT_URL}/validate-item`,
-//     { restaurantId: item.restaurantId, menuItemId: item.menuItemId, quantity: item.quantity },
-//     { timeout: 2000 }
-//   );
-
-// Find existing item
-console.log('item - before cart - 4', item)
   const existing = cart.items.find(i => i.menuItemId === item.menuItemId);
   if (existing) {
-    console.log('item - before cart - 1', item)
     existing.quantity = Math.min(existing.quantity + item.quantity, MAX_QTY_PER_ITEM);
     if (item.notes !== undefined) existing.notes = item.notes;
   } else {
     if (item.quantity < 1 || item.quantity > MAX_QTY_PER_ITEM) {
       throw { status: 400, message: `Quantity must be between 1 and ${MAX_QTY_PER_ITEM}` };
     }
-    console.log('cart - 2', cart)
-    console.log('item - before cart - 2', item.menuItemId)
-    
     cart.items.push(item as ICartItem);
   }
-  console.log('item - before cart - 3', item)
-  console.log('cart - 4', cart.items[0])
 
   recalcCart(cart);
-  console.log('cart - 3', cart)
   await cart.save();
   return cart;
 }
 
-// 4) Update item
+// Update item
 export async function updateItem(
   userId: string | undefined,
   cartIdHeader: string | undefined,
@@ -139,7 +112,6 @@ export async function updateItem(
 
   if (data.quantity !== undefined) {
     if (data.quantity < 1) {
-      // remove
       cart.items = cart.items.filter(i => i._id?.toString() !== itemId);
     } else if (data.quantity > MAX_QTY_PER_ITEM) {
       throw { status: 400, message: `Max quantity per item is ${MAX_QTY_PER_ITEM}` };
@@ -154,7 +126,7 @@ export async function updateItem(
   return cart;
 }
 
-// 5) Remove item
+// Remove item
 export async function removeItem(
   userId: string | undefined,
   cartIdHeader: string | undefined,
@@ -169,7 +141,7 @@ export async function removeItem(
   return cart;
 }
 
-// // 6) Clear cart
+// Clear cart
 export async function clearCart(
   userId: string | undefined,
   cartIdHeader: string | undefined
@@ -183,7 +155,7 @@ export async function clearCart(
   return cart;
 }
 
-// // 7) Generate Order Draft and publish
+// Generate Order Draft and publish
 export async function generateDraft(
   userId: string | undefined,
   cartId: string | undefined
@@ -207,8 +179,5 @@ export async function generateDraft(
     totalPrice: cart.total
   };
 
-  console.log('draft', draft)
-
-//   await publish('cart.ready_for_order', draft);
   return draft;
 }

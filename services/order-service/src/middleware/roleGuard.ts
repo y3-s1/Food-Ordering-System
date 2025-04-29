@@ -1,9 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
 
-/**
- * Only allows requests whose req.userRole is in the allowedRoles array.
- */
+// Only allows requests allowedRoles array.
 export function roleGuard(allowedRoles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const { userRole } = req;

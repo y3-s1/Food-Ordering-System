@@ -7,15 +7,12 @@ export interface AuthRequest extends Request {
   userRole?: string;
 }
 
+// verify the request token
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  // Try to get authentication token from cookies
   const token = req.cookies.token;
-
   if (token) {
     try {
-      // Verify and decode the JWT token
       const payload = jwt.verify(token, JWT_SECRET) as any;
-      // Extract user information from payload
       req.userId = payload._id;
       req.userRole = payload.role; 
       

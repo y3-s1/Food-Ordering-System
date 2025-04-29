@@ -8,20 +8,16 @@ export interface AuthRequest extends Request {
   userRole?: string;
 }
 
+// authenticate request token and role
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  // Try to get authentication token from cookies
   const token = req.cookies.token;
   const guestCartId = req.cookies.cartId;
 
   if (token) {
     try {
-      // Verify and decode the JWT toke
       const payload = jwt.verify(token, JWT_SECRET) as any;
-      // Extract user information from payload
       req.userId = payload._id;
-      req.userRole = payload.role; // Extract the role
-      
-      // If the payload contains cartId, use it
+      req.userRole = payload.role;
       if (payload.cartId) {
         req.cartId = payload.cartId;
       }
@@ -32,7 +28,6 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
       return
     }
   } else if (guestCartId) {
-    // Handle guest users with only a cart ID
     req.cartId = guestCartId;
     return next();
   } else {
