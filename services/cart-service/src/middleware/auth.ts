@@ -15,10 +15,8 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
 
   if (token) {
     try {
-      // Verify and decode the JWT token
-      console.log('token', token)
+      // Verify and decode the JWT toke
       const payload = jwt.verify(token, JWT_SECRET) as any;
-      console.log('payload ', payload )
       // Extract user information from payload
       req.userId = payload._id;
       req.userRole = payload.role; // Extract the role
@@ -30,13 +28,15 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
       
       return next();
     } catch (error) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return
     }
   } else if (guestCartId) {
     // Handle guest users with only a cart ID
     req.cartId = guestCartId;
     return next();
   } else {
-    return res.status(401).json({ error: 'No credentials provided' });
+    res.status(401).json({ error: 'No credentials provided' });
+    return
   }
 }
