@@ -3,35 +3,36 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
 
-
 import connectDB from './config/db';
 import errorHandler from './middleware/errorMiddleware';
 import restaurantRoutes from './routes/restaurantRoutes';
-// import menuItemRoutes from './routes/menuItemRoutes';
-
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5003;
+const PORT = process.env.PORT || 5001; // ✅ must match your frontend config!
 
-// middleware
-app.use(cors());
+// ✅ CORS Configuration
+app.use(cors({
+  origin: 'http://localhost:5173', // allow only frontend
+  credentials: true,               // allow cookies
+}));
+
+app.options('*', cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
+
+// ✅ parse JSON body
 app.use(express.json());
 
-
-
-// Routes
+// ✅ Routes
 app.use('/api/restaurants', restaurantRoutes);
 
-
-
-// Error Handling Middleware
+// ✅ Error Handling
 app.use(errorHandler);
 
-
-
-//connect to DB and start server
+// ✅ Start Server
 connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Restaurant service running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Restaurant service running at http://localhost:${PORT}`));
 });
