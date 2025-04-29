@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MenuItem, Restaurant } from '../../types/restaurant/restaurant';
 import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/restaurantService';
-import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft, addToCart } from '../../services/cart/cartService';
-import { Cart, CartItem } from '../../types/cart/cart';
+import { updateItemQuantity, addToCart } from '../../services/cart/cartService';
+import { Cart } from '../../types/cart/cart';
 import CartDrawer from '../../components/cart/CartDrawer';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
-import CartComponent from '../cart/Cart';
+// import { useMediaQuery } from '../../hooks/useMediaQuery';
+// import CartComponent from '../cart/Cart';
 
 const RestaurantUserDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,26 +60,27 @@ const RestaurantUserDetailPage: React.FC = () => {
     updateItemQuantity(itemId, qty).then(setCart);
   }, []);
 
-  const handleRemoveItem = useCallback((itemId: string) => {
-    removeItem(itemId).then(setCart);
-  }, []);
+  // const handleRemoveItem = useCallback((itemId: string) => {
+  //   removeItem(itemId).then(setCart);
+  // }, []);
 
-  const handleClearCart = useCallback(() => {
-    clearCart().then(setCart);
-  }, []);
+  // const handleClearCart = useCallback(() => {
+  //   clearCart().then(setCart);
+  // }, []);
 
-  const handlePlaceOrder = useCallback(async () => {
-    try {
-      const draft = await fetchDraft();
-      navigate('/order/new', { state: draft });
-    } catch (err) {
-      console.error('Error placing order:', err);
-    }
-  }, [navigate]);
+  // const handlePlaceOrder = useCallback(async () => {
+  //   try {
+  //     const draft = await fetchDraft();
+  //     navigate('/order/new', { state: draft });
+  //   } catch (err) {
+  //     console.error('Error placing order:', err);
+  //   }
+  // }, [navigate]);
 
   const handleAddToCart = useCallback((item: MenuItem) => {
     // Prepare the item data according to the API requirements
     const cartItem = {
+        _id:         item._id, 
         restaurantId: item.restaurantId,
         menuItemId:   item._id,
         name:         item.name,
@@ -111,10 +112,20 @@ const RestaurantUserDetailPage: React.FC = () => {
         console.error('Error adding item to cart:', error);
       });
     }
-    
-    // Show cart when item is added
-    setCartOpen(true);
-  }, [cart.items, handleUpdateQty, setCart]);
+
+
+    sessionStorage.setItem('openCartAfterReload', 'true');
+    navigate(0);
+
+  }, [cart.items, handleUpdateQty, navigate]);
+
+  useEffect(() => {
+    if (sessionStorage.getItem('openCartAfterReload') === 'true') {
+      setCartOpen(true);
+      sessionStorage.removeItem('openCartAfterReload');
+    }
+  }, []);
+  
 
   const categories = ['all', ...new Set(menuItems.map(item => item.category))];
   

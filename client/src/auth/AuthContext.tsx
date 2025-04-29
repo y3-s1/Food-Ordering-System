@@ -9,7 +9,7 @@ type User = {
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: User | null ;
   login: (user: User) => void;
   logout: () => void;
   loading: boolean;

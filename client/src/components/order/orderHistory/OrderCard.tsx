@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { OrderDTO } from '../../../types/order/order';
 
@@ -21,8 +21,8 @@ export default function OrderCard({ order }: Props) {
         <div className="ml-4 flex-1">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-semibold">{order.restaurantName}</h3>
-              <p className="text-sm text-gray-500">{order.address}</p>
+              {/* <h3 className="font-semibold">{order.restaurantName}</h3>
+              <p className="text-sm text-gray-500">{order.address}</p> */}
               <p className="text-sm text-gray-400">ORDER #{order._id.slice(-6)}</p>
               <button
                 className="text-red-500 text-sm mt-1 underline"

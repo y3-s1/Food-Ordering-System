@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-react';
 import CartDrawer from '../cart/CartDrawer';

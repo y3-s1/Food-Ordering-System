@@ -33,7 +33,8 @@ export const OrderConfirmation: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-16 px-4">
       <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-        {order.customerName}, Your order has been successful
+        {/* {order.customerName}, Your order has been successful */}
+        Your order has been successful
       </h1>
       <p className="text-center text-gray-600 mb-8">
         Check your order status in{' '}
