@@ -9,6 +9,7 @@ import connectDB from './config/db';
 import orderRoutes from './routes/orderRoutes';
 import errorHandler from './middleware/errorHandler';
 import { PORT, CLIENT_ORIGIN } from './config';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -25,8 +26,13 @@ async function bootstrap() {
     ? CLIENT_ORIGIN.slice(0, -1) 
     : CLIENT_ORIGIN;
   
-  app.use(cors({ origin }));
+  app.use(cors({ 
+    origin,
+    credentials: true,
+   }));
+
   app.use(json());
+  app.use(cookieParser());
   app.use('/api/v1/orders', orderRoutes);
   app.use(errorHandler);
 

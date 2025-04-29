@@ -21,9 +21,11 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
       
       return next();
     } catch (error) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return
     }
   } else {
-    return res.status(401).json({ error: 'No credentials provided' });
+    res.status(401).json({ error: 'No credentials provided' });
+    return
   }
 }
