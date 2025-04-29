@@ -235,3 +235,46 @@ export const getDeliveriesByDriver: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch deliveries by driver', error: err });
   }
 };
+
+
+// 9. Toggle driver's online/offline status
+export const updateDriverAvailability: RequestHandler = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== 'boolean') {
+      res.status(400).json({ message: 'isAvailable must be a boolean' });
+      return;
+    }
+
+    const driver = await DriverStatus.findOne({ userId });
+
+    if (!driver) {
+      res.status(404).json({ message: 'Driver not found' });
+      return;
+    }
+
+    // Prevent going offline if there are active deliveries
+    if (
+      !isAvailable &&
+      (await Delivery.findOne({
+        driverId: userId,
+        status: { $in: ['ASSIGNED', 'OUT_FOR_DELIVERY'] }
+      }))
+    ) {
+      res.status(400).json({
+        message: 'Cannot go offline with active deliveries',
+      });
+      return;
+    }
+
+    driver.isAvailable = isAvailable;
+    await driver.save();
+
+    res.json({ message: `Driver is now ${isAvailable ? 'online' : 'offline'}` });
+  } catch (err) {
+    console.error('Failed to update driver availability:', err);
+    res.status(500).json({ message: 'Failed to update driver status', error: err });
+  }
+};

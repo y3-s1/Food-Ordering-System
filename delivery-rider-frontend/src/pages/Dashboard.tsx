@@ -208,6 +208,7 @@ const Dashboard = () => {
         isOnline={isOnline}
         setIsOnline={setIsOnline}
         hasActiveDeliveries={hasActiveDeliveries}
+        driverId={driverId}
       />
 
       {currentPosition && (

@@ -6,7 +6,8 @@ import {
   getAvailableDrivers,
   updateDriverLocation,
   registerDriverStatus,
-  getDeliveriesByDriver
+  getDeliveriesByDriver,
+  updateDriverAvailability
 } from '../controllers/deliveryController';
 
 const router = express.Router();
@@ -20,6 +21,7 @@ router.get('/', getDeliveriesByDriver);
 // Driver status endpoints
 router.get('/drivers/available', getAvailableDrivers);
 router.post('/drivers/register', registerDriverStatus);
-router.put('/drivers/:userId/location', updateDriverLocation); 
+router.put('/drivers/:userId/location', updateDriverLocation);
+router.put('/drivers/:userId/availability', updateDriverAvailability);
 
 export default router;
