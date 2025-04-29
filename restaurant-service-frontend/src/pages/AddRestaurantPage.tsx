@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRestaurant } from '../api/restaurantApi';
 import FormInput from '../components/restaurant/FormInput';
@@ -8,11 +8,17 @@ const AddRestaurantPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     address: '',
+    location: {
+      lat: 0,
+      lng: 0
+    },
     contactNumber: '',
     email: '',
     cuisineType: '',
@@ -37,12 +43,59 @@ const AddRestaurantPage: React.FC = () => {
     }
   };
   
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = parseFloat(value) || 0;
+    
+    setFormData({
+      ...formData,
+      location: {
+        ...formData.location,
+        [name]: numValue
+      }
+    });
+    
+    // Clear error when user starts typing
+    if (errors[`location.${name}`]) {
+      setErrors({
+        ...errors,
+        [`location.${name}`]: '',
+      });
+    }
+  };
+  
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData({
       ...formData,
       [name]: checked,
     });
+  };
+  
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setLocationLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData({
+            ...formData,
+            location: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            }
+          });
+          setLocationLoading(false);
+          setUseCurrentLocation(true);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocationLoading(false);
+          alert("Unable to get your current location. Please enter coordinates manually.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
   };
   
   const validateForm = () => {
@@ -58,6 +111,15 @@ const AddRestaurantPage: React.FC = () => {
     
     if (!formData.address.trim()) {
       newErrors.address = 'Address is required';
+    }
+    
+    // Validate location
+    if (formData.location.lat === 0) {
+      newErrors['location.lat'] = 'Latitude is required';
+    }
+    
+    if (formData.location.lng === 0) {
+      newErrors['location.lng'] = 'Longitude is required';
     }
     
     if (!formData.contactNumber.trim()) {
@@ -190,6 +252,75 @@ const AddRestaurantPage: React.FC = () => {
                   required
                   error={errors.address}
                 />
+              </div>
+              
+              {/* Location Fields */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Restaurant Location</label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      disabled={locationLoading}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1 px-3 rounded-lg transition-colors duration-300 flex items-center gap-1"
+                    >
+                      {locationLoading ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Getting location...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          </svg>
+                          <span>Use My Current Location</span>
+                        </>
+                      )}
+                    </button>
+                    {useCurrentLocation && (
+                      <span className="text-sm text-green-600">✓ Using your current location</span>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Latitude</label>
+                      <input
+                        type="number"
+                        name="lat"
+                        step="any"
+                        value={formData.location.lat}
+                        onChange={handleLocationChange}
+                        className={`w-full px-3 py-2 border ${errors['location.lat'] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                        required
+                      />
+                      {errors['location.lat'] && (
+                        <p className="mt-1 text-xs text-red-500">{errors['location.lat']}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Longitude</label>
+                      <input
+                        type="number"
+                        name="lng"
+                        step="any"
+                        value={formData.location.lng}
+                        onChange={handleLocationChange}
+                        className={`w-full px-3 py-2 border ${errors['location.lng'] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                        required
+                      />
+                      {errors['location.lng'] && (
+                        <p className="mt-1 text-xs text-red-500">{errors['location.lng']}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <FormInput

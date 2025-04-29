@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { X, User, LogOut, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext';
 
 interface SidebarDrawerProps {
   isOpen: boolean;
@@ -9,11 +10,12 @@ interface SidebarDrawerProps {
 
 const SidebarDrawer: FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
     // TODO: Add your logout logic here (e.g., clear auth tokens, call API)
-    console.log('Logging out...');
-    navigate('/login');
+    logout();
+    navigate('/');
     onClose();
   };
 
@@ -45,7 +47,7 @@ const SidebarDrawer: FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
           <button
             className="flex items-center space-x-2 w-full text-left hover:text-red-500"
             onClick={() => {
-              navigate('/profile');
+              navigate('/dashboard');
               onClose();
             }}
           >

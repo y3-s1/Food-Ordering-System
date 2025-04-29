@@ -1,8 +1,18 @@
-// controllers/menuItemController.ts
+// controllers/menuItemController.ts (updated)
 import { Request, Response } from 'express';
 import MenuItem, { IMenuItem } from '../models/menuItemModel';
-import Restaurant from '../models/restaurantModel'; // Make sure to import your Restaurant model
+import Restaurant from '../models/restaurantModel';
 import mongoose from 'mongoose';
+
+// Custom Request interface with user info
+interface AuthRequest extends Request {
+  user?: {
+    _id: string;
+    email: string;
+    role: string;
+    isAdmin: boolean;
+  };
+}
 
 // Get all menu items for a restaurant
 export const getMenuItems = async (req: Request, res: Response): Promise<void> => {
@@ -15,10 +25,8 @@ export const getMenuItems = async (req: Request, res: Response): Promise<void> =
     }
 
     const menuItems = await MenuItem.find({ restaurantId });
-    console.log(`Found ${menuItems.length} menu items for restaurant ${restaurantId}`);
     res.status(200).json(menuItems);
   } catch (error) {
-    console.error('Error fetching menu items:', error);
     res.status(500).json({ 
       message: 'Error fetching menu items', 
       error: error instanceof Error ? error.message : String(error) 
@@ -26,7 +34,7 @@ export const getMenuItems = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// Get menu item by ID for a specific restaurant
+// Get menu item by ID
 export const getMenuItemById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { restaurantId, itemId } = req.params;
@@ -47,7 +55,6 @@ export const getMenuItemById = async (req: Request, res: Response): Promise<void
     }
     res.status(200).json(menuItem);
   } catch (error) {
-    console.error('Error fetching menu item:', error);
     res.status(500).json({ 
       message: 'Error fetching menu item', 
       error: error instanceof Error ? error.message : String(error) 
@@ -55,8 +62,8 @@ export const getMenuItemById = async (req: Request, res: Response): Promise<void
   }
 };
 
-// Create new menu item for a restaurant
-export const createMenuItem = async (req: Request, res: Response): Promise<void> => {
+// Create new menu item - check restaurant ownership
+export const createMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { restaurantId } = req.params;
     
@@ -73,8 +80,11 @@ export const createMenuItem = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    console.log('Restaurant found:', restaurant._id);
-    console.log('Request body:', req.body);
+    // Verify ownership or admin status
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to manage menu items for this restaurant' });
+      return;
+    }
 
     // Validate required fields
     const { name, description, price, category } = req.body;
@@ -87,29 +97,24 @@ export const createMenuItem = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Create and save menu item
+    // Create menu item
     const newMenuItem = new MenuItem({
       ...req.body,
-      restaurantId: restaurantId // Ensure we're using the parameter from URL
+      restaurantId
     });
     
-    console.log('About to save menu item:', newMenuItem);
     const savedMenuItem = await newMenuItem.save();
-    console.log('Menu item saved successfully:', savedMenuItem._id);
-    
     res.status(201).json(savedMenuItem);
   } catch (error) {
-    console.error('Error creating menu item:', error);
     res.status(400).json({ 
       message: 'Error creating menu item', 
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 };
 
-// Update menu item for a restaurant
-export const updateMenuItem = async (req: Request, res: Response): Promise<void> => {
+// Update menu item - check restaurant ownership
+export const updateMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { restaurantId, itemId } = req.params;
     
@@ -118,8 +123,22 @@ export const updateMenuItem = async (req: Request, res: Response): Promise<void>
       return;
     }
     
+    // Check restaurant ownership
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+
+    // Verify ownership or admin status
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to manage menu items for this restaurant' });
+      return;
+    }
+    
+    // Update the menu item
     const updatedMenuItem = await MenuItem.findOneAndUpdate(
-      { _id: itemId, restaurantId: restaurantId },
+      { _id: itemId, restaurantId },
       req.body,
       { new: true, runValidators: true }
     );
@@ -128,10 +147,9 @@ export const updateMenuItem = async (req: Request, res: Response): Promise<void>
       res.status(404).json({ message: 'Menu item not found' });
       return;
     }
-    console.log('Menu item updated successfully:', updatedMenuItem._id);
+    
     res.status(200).json(updatedMenuItem);
   } catch (error) {
-    console.error('Error updating menu item:', error);
     res.status(400).json({ 
       message: 'Error updating menu item', 
       error: error instanceof Error ? error.message : String(error)
@@ -139,8 +157,8 @@ export const updateMenuItem = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Delete menu item from a restaurant
-export const deleteMenuItem = async (req: Request, res: Response): Promise<void> => {
+// Delete menu item - check restaurant ownership
+export const deleteMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { restaurantId, itemId } = req.params;
     
@@ -149,19 +167,32 @@ export const deleteMenuItem = async (req: Request, res: Response): Promise<void>
       return;
     }
     
+    // Check restaurant ownership
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+
+    // Verify ownership or admin status
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to manage menu items for this restaurant' });
+      return;
+    }
+    
+    // Delete the menu item
     const deletedMenuItem = await MenuItem.findOneAndDelete({ 
       _id: itemId,
-      restaurantId: restaurantId 
+      restaurantId
     });
     
     if (!deletedMenuItem) {
       res.status(404).json({ message: 'Menu item not found' });
       return;
     }
-    console.log('Menu item deleted successfully:', itemId);
+    
     res.status(200).json({ message: 'Menu item deleted successfully' });
   } catch (error) {
-    console.error('Error deleting menu item:', error);
     res.status(500).json({ 
       message: 'Error deleting menu item', 
       error: error instanceof Error ? error.message : String(error)
@@ -169,8 +200,8 @@ export const deleteMenuItem = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Toggle menu item availability for a restaurant
-export const toggleItemAvailability = async (req: Request, res: Response): Promise<void> => {
+// Toggle menu item availability - check restaurant ownership
+export const toggleItemAvailability = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { restaurantId, itemId } = req.params;
     
@@ -179,9 +210,23 @@ export const toggleItemAvailability = async (req: Request, res: Response): Promi
       return;
     }
     
+    // Check restaurant ownership
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ message: 'Restaurant not found' });
+      return;
+    }
+
+    // Verify ownership or admin status
+    if (!req.user?.isAdmin && restaurant.ownerId.toString() !== req.user?._id) {
+      res.status(403).json({ message: 'Not authorized to manage menu items for this restaurant' });
+      return;
+    }
+    
+    // Toggle menu item availability
     const menuItem = await MenuItem.findOne({ 
       _id: itemId,
-      restaurantId: restaurantId 
+      restaurantId
     });
     
     if (!menuItem) {
@@ -192,13 +237,11 @@ export const toggleItemAvailability = async (req: Request, res: Response): Promi
     menuItem.isAvailable = !menuItem.isAvailable;
     await menuItem.save();
     
-    console.log(`Menu item ${itemId} availability toggled to ${menuItem.isAvailable}`);
     res.status(200).json({ 
       message: `Menu item is now ${menuItem.isAvailable ? 'available' : 'unavailable'}`,
       isAvailable: menuItem.isAvailable
     });
   } catch (error) {
-    console.error('Error toggling menu item availability:', error);
     res.status(500).json({ 
       message: 'Error toggling menu item availability', 
       error: error instanceof Error ? error.message : String(error)
