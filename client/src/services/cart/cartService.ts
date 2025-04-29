@@ -1,39 +1,48 @@
+// cartService.ts
 import axios from 'axios';
 import { Cart, CartItem, OrderDraft } from '../../types/cart/cart';
+import { MenuItem } from '../../types/restaurant/restaurant';
+
+const API_URL = 'http://localhost:5005/api/v1';
+
+// Create axios instance with credentials to send/receive cookies
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true, // Important for sending/receiving cookies
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 
 export const fetchCart = async (): Promise<Cart> => {
-  const res = await axios.get<Cart>('http://localhost:5005/api/v1/cart', {
-    headers: { 'Content-Type': 'application/json', 'X-Cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
-  });
-  console.log('res.data', res.data)
-  return res.data;
+  const response = await api.get<Cart>('/cart');
+  return response.data;
 };
 
-export const updateItemQuantity = async (itemId: string, quantity: number): Promise<Cart> => {
-  const res = await axios.put<Cart>(`http://localhost:5005/api/v1/cart/items/${itemId}`, { quantity },{
-    headers: { 'Content-Type': 'application/json', 'X-Cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
-  });
-  return res.data;
+export const updateItemQuantity = async (id: string, qty: number): Promise<Cart> => {
+  const response = await api.put<Cart>(`/cart/items/${id}`, { quantity: qty });
+  return response.data;
 };
 
-export const removeItem = async (itemId: string): Promise<Cart> => {
-  const res = await axios.delete<Cart>(`http://localhost:5005/api/v1/cart/items/${itemId}`, {
-    headers: { 'Content-Type': 'application/json', 'X-Cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
-  });
-  return res.data;
+export const removeItem = async (id: string): Promise<Cart> => {
+  const response = await api.delete<Cart>(`/cart/items/${id}`);
+  return response.data;
 };
 
 export const clearCart = async (): Promise<Cart> => {
-    const res = await axios.delete<Cart>('http://localhost:5005/api/v1/cart', {
-     headers: { 'Content-Type': 'application/json', 'X-Cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
-    });
-    return res.data;
-  };
+  const response = await api.delete<Cart>('/cart/items');
+  return response.data;
+};
 
 export const fetchDraft = async (): Promise<OrderDraft> => {
-    const res = await axios.get<OrderDraft>('http://localhost:5005/api/v1/cart/draft', {
-        headers: { 'Content-Type': 'application/json', 'x-cart-Id': '2ca10287-1915-4c66-81ab-fac65dbf5982' }
-    });
-    console.log('res.data.order', res.data)
-    return res.data;
-  };
+  const response = await api.get<OrderDraft>('/cart/draft');
+  return response.data;
+};
+
+export const addToCart = async (item: CartItem): Promise<Cart> => {
+  const response = await api.post<Cart>('/cart/items', { 
+    item
+  });
+  return response.data;
+};

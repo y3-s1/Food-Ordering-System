@@ -5,21 +5,36 @@ import { JWT_SECRET } from '../config';
 export interface AuthRequest extends Request {
   userId?: string;
   cartId?: string;
+  userRole?: string;
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  const auth = req.headers.authorization;
-  const guest = req.headers['x-cart-id'] as string;
-  if (auth && auth.startsWith('Bearer ')) {
+  // Try to get authentication token from cookies
+  const token = req.cookies.token;
+  const guestCartId = req.cookies.cartId;
+
+  if (token) {
     try {
-      const payload = jwt.verify(auth.split(' ')[1], JWT_SECRET) as any;
-      req.userId = payload.userId;
+      // Verify and decode the JWT token
+      console.log('token', token)
+      const payload = jwt.verify(token, JWT_SECRET) as any;
+      console.log('payload ', payload )
+      // Extract user information from payload
+      req.userId = payload._id;
+      req.userRole = payload.role; // Extract the role
+      
+      // If the payload contains cartId, use it
+      if (payload.cartId) {
+        req.cartId = payload.cartId;
+      }
+      
       return next();
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
+    } catch (error) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
-  } else if (guest) {
-    req.cartId = guest;
+  } else if (guestCartId) {
+    // Handle guest users with only a cart ID
+    req.cartId = guestCartId;
     return next();
   } else {
     return res.status(401).json({ error: 'No credentials provided' });

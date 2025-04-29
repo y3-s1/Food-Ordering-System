@@ -1,9 +1,10 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { placeOrder } from '../../services/order/orderService';
-import type { CreateOrderDTO, OrderItemDTO } from '../../types/order/order';
+import type { CreateOrderDTO, DeliveryOption, OrderItemDTO, PaymentMethod } from '../../types/order/order';
 import { OrderDraft } from '../../types/cart/cart';
 import { getRestaurantById } from '../../services/resturent/restaurantService';
+import { useAuth } from '../../auth/AuthContext';
 
 interface IRestaurant {
   _id: string;
@@ -22,39 +23,47 @@ interface IRestaurant {
 }
 
 export function OrderFormPage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { state: draft } = useLocation() as { state: OrderDraft };
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(true);
   const [deliveryOption, setDeliveryOption] = useState<'Standard' | 'PickUp'>('Standard');
+  const [paymentMethod, setPaymentMethod] = useState<"Card" | "Cash on Delivery">("Card");
   const [form, setForm] = useState<CreateOrderDTO>({
-    customerId: draft?.customerId || '',
-    customerName: draft?.customerName || '',
-    customerPhone: draft?.customerPhone || '',
-    restaurantId: draft?.restaurantId || '',
-    items: draft
+    customerId:     draft?.customerId     || '',
+    customerName:   draft?.customerName   || '',
+    customerPhone:  draft?.customerPhone  || '',
+    customerEmail:  draft?.customerEmail  || user?.email || '',
+    restaurantId:   draft?.restaurantId   || '',
+    items:          draft
       ? draft.items.map(i => ({
           menuItemId: i.menuItemId,
-          name: i.name,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice
+          name:       i.name,
+          imageUrl:   i.imageUrl,
+          quantity:   i.quantity,
+          unitPrice:  i.unitPrice,
         }))
       : [{ menuItemId: '', name: '', quantity: 1, unitPrice: 0 }],
+    deliveryOption: 'Standard',
     deliveryAddress: {
-      street: '',
-      city: '',
-      postalCode: '',
-      country: ''
+      street:      '',
+      city:        '',
+      postalCode:  '',
+      country:     '',
     },
-    notes: '',
-    promotionCode: draft?.promotionCode || '',
+    paymentMethod: 'Card',
+    location:      { lat: 0, lng: 0 },
+    notes:          draft?.notes          || '',
+    promotionCode:  draft?.promotionCode  || '',
     fees: {
-      deliveryFee: draft?.fees?.deliveryFee || 0,
-      serviceFee: draft?.fees?.serviceFee || 0,
-      tax: draft?.fees?.tax || 0
+      deliveryFee: draft?.fees.deliveryFee || 0,
+      serviceFee:  draft?.fees.serviceFee  || 0,
+      tax:         draft?.fees.tax         || 0,
     },
-    totalPrice: draft?.totalPrice || 0
+    totalPrice:     draft?.totalPrice     || 0,
   });
+  
 
   // Fetch restaurant details when restaurantId is available
   useEffect(() => {
@@ -69,6 +78,18 @@ export function OrderFormPage() {
     console.log('restaurant', restaurant)
   }, [restaurant]);
 
+  useEffect(() => {
+    if (user) {
+      setForm(f => ({
+        ...f,
+        customerId: user._id,
+        customerName: user.name,
+        customerPhone: (user as any).phoneNumber || f.customerPhone,
+        customerEmail: user.email
+      }));
+    }
+  }, [user]);
+
 
   const subtotal = form.items.reduce(
     (sum, itm) => sum + itm.unitPrice * itm.quantity,
@@ -81,6 +102,16 @@ export function OrderFormPage() {
 
   function updateField<K extends keyof CreateOrderDTO>(key: K, value: CreateOrderDTO[K]) {
     setForm(f => ({ ...f, [key]: value }));
+  }
+
+  function handleDeliveryChange(opt: DeliveryOption) {
+    setDeliveryOption(opt);
+    updateField('deliveryOption', opt);
+  }
+
+  function handlePaymentChange(opt: PaymentMethod) {
+    setPaymentMethod(opt);
+    updateField('paymentMethod', opt);
   }
 
   function updateItem(idx: number, item: Partial<OrderItemDTO>) {
@@ -100,9 +131,25 @@ export function OrderFormPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+
+    // 1) place the order in your backend
     const res = await placeOrder(form);
-    navigate(`/order/confirm/${res.data._id}`);
+    const orderId = res.data._id;
+
+    if (form.paymentMethod === 'Card') {
+      // 2a) for card, go to checkout and pass the amount (in cents/paise if needed)
+      navigate('/checkout', {
+        state: {
+          orderId,
+          amount: Math.round(total * 100), 
+        }
+      });
+    } else {
+      // 2b) for COD, go directly to confirmation
+      navigate(`/order/confirm/${orderId}`);
+    }
   }
+
 
   return (
     <div className="max-w-5xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -133,25 +180,30 @@ export function OrderFormPage() {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {/* phone icon */}
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h2.586a1 1 0 01.707.293l2.414
-                    2.414a1 1 0 00.707.293H15a2 2 0 012 2v2.586a1
-                    1 0 01-.293.707l-2.414 2.414a1 1 0 00-.293.707V17a2
-                    2 0 01-2 2H5a2 2 0 01-2-2V5z" />
-              </svg>
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={form.customerPhone}
-                onChange={e => updateField('customerPhone', e.target.value)}
-                className="flex-1 border rounded-lg p-2 w-full"
-                required
+          <div className="flex items-center space-x-2">
+            {/* envelope / email icon */}
+            <svg
+              className="w-5 h-5 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 12l-4-4-4 4m0 0l4 4 4-4"
               />
-            </div>
+            </svg>
+            <input
+              type="email"
+              placeholder="Email address"
+              value={form.customerEmail}
+              onChange={e => updateField('customerEmail', e.target.value)}
+              className="flex-1 border rounded-lg p-2 w-full"
+              required
+            />
+          </div>
           </div>
         </section>
 
@@ -197,7 +249,7 @@ export function OrderFormPage() {
                     name="deliveryOption"
                     value={opt}
                     checked={isSelected}
-                    onChange={() => setDeliveryOption(opt)}
+                    onChange={() => handleDeliveryChange(opt)}
                     className="mr-3"
                   />
                   <div className="flex-1">
@@ -228,13 +280,68 @@ export function OrderFormPage() {
 
 
         {/* Payment Card */}
-        {/* <section className="bg-white rounded-2xl p-6 shadow">
-          <h2 className="text-xl font-semibold mb-4">Payment</h2>
-          <button className="w-full flex items-center justify-center space-x-2 border border-dashed border-gray-300 rounded-lg p-4 hover:bg-gray-50">
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18" /></svg>
-            <span className="font-medium text-gray-700">Add payment method</span>
-          </button>
-        </section> */}
+        <section className="bg-white rounded-2xl p-6 shadow">
+      <h2 className="text-xl font-semibold mb-4">Payment</h2>
+      <div className="space-y-3">
+        {(["Card", "Cash on Delivery"] as const).map((opt) => {
+          const isSelected = paymentMethod === opt;
+          return (
+            <label
+              key={opt}
+              className={`
+                flex items-center p-4 rounded-lg cursor-pointer
+                border ${isSelected ? "border-black" : "border-gray-200"}
+                hover:shadow
+              `}
+            >
+              <input
+                type="radio"
+                name="paymentMethod"
+                value={opt}
+                checked={isSelected}
+                onChange={() => handlePaymentChange(opt)}
+                className="mr-3"
+              />
+              <div className="flex-1 flex items-center space-x-2">
+                {/* Icon */}
+                {opt === "Card" ? (
+                  <svg
+                    className="w-6 h-6 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-6 h-6 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+                <div>
+                  <p className="font-medium">{opt}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {opt === "Card" && "Visa, MasterCard, AMEX"}
+                    {opt === "Cash on Delivery" && "Pay when you receive order"}
+                  </p>
+                </div>
+              </div>
+            </label>
+          );
+        })}
+      </div>
+    </section>
 
         {/* Continue Button */}
         <button 
@@ -314,7 +421,11 @@ export function OrderFormPage() {
                     <div className="flex items-start space-x-4">
                       {/* if you have thumbnails, swap this div for an <img> */}
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        📷
+                      <img 
+                          src={item.imageUrl || 'https://th.bing.com/th/id/OIP.3f4uw03GjHN2wa2tSeNc4wHaIu?rs=1&pid=ImgDetMain'} 
+                          alt={item.name} 
+                          className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center"
+                        />
                       </div>
                       <div>
                         <p className="font-medium">{item.name || "Unnamed item"}</p>

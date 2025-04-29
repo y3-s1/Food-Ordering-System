@@ -16,3 +16,4 @@ export const PORT       = parseInt(process.env.PORT!, 10);
 export const MONGO_URI  = process.env.MONGO_URI!;
 // export const BROKER_URL = process.env.BROKER_URL!;
 export const JWT_SECRET = process.env.JWT_SECRET!;
+export const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN!;
