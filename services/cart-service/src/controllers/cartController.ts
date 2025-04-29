@@ -1,21 +1,27 @@
-/* services/cart-service/src/controllers/cartController.ts */
+
 import { Request, Response, NextFunction } from 'express';
 import * as cartService from '../services/cartService';
 
-// Helper to extract auth context
+
 function getContext(req: Request) {
   const userId = (req as any).userId as string | undefined;
   const cartId = (req as any).cartId as string | undefined;
-  return { userId, cartId };
+  const userRole = (req as any).userRole as string | undefined;
+  
+  return { userId, cartId, userRole };
 }
 
 export const getCart = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, cartId } = getContext(req);
     const cart = await cartService.getCart(userId, cartId);
-    // Return cart and possibly set header for guest
-    if (!userId && cart.cartId !== cartId) {
-      res.setHeader('X-Cart-Id', cart.cartId);
+    if (!userId) {
+      res.cookie('cartId', cart.cartId, {
+        httpOnly: true,        
+        secure: process.env.NODE_ENV === 'production', 
+        maxAge: 30 * 24 * 60 * 60 * 1000, 
+        sameSite: 'lax'       
+      });
     }
     res.json(cart);
   } catch (err) {
@@ -26,10 +32,15 @@ export const getCart = async (req: Request, res: Response, next: NextFunction) =
 export const addItem = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, cartId } = getContext(req);
-    const item = req.body;
+    const item = req.body.item;
     const cart = await cartService.addItem(userId, cartId, item);
-    if (!userId && cart.cartId !== cartId) {
-      res.setHeader('X-Cart-Id', cart.cartId);
+    if (!userId) {
+      res.cookie('cartId', cart.cartId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: 'lax'
+      });
     }
     res.status(201).json(cart);
   } catch (err) {
@@ -73,8 +84,8 @@ export const clearCart = async (req: Request, res: Response, next: NextFunction)
 export const generateDraft = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { userId, cartId } = getContext(req);
-    // if (!userId) throw { status: 401, message: 'User must be authenticated to checkout' };
-    const draft = await cartService.generateDraft('test-user-id2', cartId);
+    if (!userId) throw { status: 401, message: 'User must be authenticated to checkout' };
+    const draft = await cartService.generateDraft( userId, cartId);
     res.json(draft);
   } catch (err) {
     next(err);

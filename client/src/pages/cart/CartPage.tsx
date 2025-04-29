@@ -4,8 +4,10 @@ import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft } from
 import CartComponent from '../../components/cart/Cart';
 import { Cart, OrderDraft } from '../../types/cart/cart';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useAuth } from '../../auth/AuthContext';
 
 const CartPage: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<Cart>({
     items: [],
     discountAmount: 0,
@@ -14,6 +16,7 @@ const CartPage: React.FC = () => {
     total: 0,
   });
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // detect desktop > hide page on desktop
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -26,8 +29,18 @@ const CartPage: React.FC = () => {
   }, [isDesktop, navigate]);
 
   useEffect(() => {
-    fetchCart().then(setCart);
-  }, []);
+    setLoading(true);
+    fetchCart()
+      .then(cart => {
+        setCart(cart);
+        console.log('cart-new', cart)
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching cart:', error);
+        setLoading(false);
+      });
+  }, [user]);
 
   const handleUpdateQty = (id: string, qty: number) => {
     if (qty < 1) return;
@@ -44,12 +57,22 @@ const CartPage: React.FC = () => {
 
   const handlePlaceOrder = async () => {
     try {
+      if (!user) {
+        // Redirect to login first if user is not authenticated
+        navigate('/login', { state: { returnTo: '/order/new' } });
+        return;
+      }
+      
       const draft: OrderDraft = await fetchDraft();
       navigate('/order/new', { state: draft });
     } catch (err) {
-      console.error(err);
+      console.error('Error preparing order:', err);
     }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading cart...</div>;
+  }
 
   return (
     <div className="flex justify-end p-6 md:justify-end md:p-0">

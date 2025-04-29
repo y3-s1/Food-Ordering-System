@@ -1,33 +1,65 @@
+// src/index.ts
 import express from 'express';
+import http from 'http';
 import cors from 'cors';
 import { json } from 'body-parser';
 import dotenv from 'dotenv';
+import { Server as SocketIOServer } from 'socket.io';
 import connectDB from './config/db';
-// import connectBroker from './config/broker';
 import orderRoutes from './routes/orderRoutes';
-// import { authMiddleware } from './middleware/auth';
 import errorHandler from './middleware/errorHandler';
-import { PORT } from './config';
+import { PORT, CLIENT_ORIGIN } from './config';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
+// declare & export the io reference
+export let io: SocketIOServer;
+
 async function bootstrap() {
   await connectDB();
-//   await connectBroker();
 
   const app = express();
-  app.use(cors());
+  
+  const raw = process.env.CLIENT_ORIGIN || '';
+  const allowedOrigins = raw
+    .split(',')
+    .map(o => o.trim())               
+    .filter(o => !!o)                  
+    .map(o => o.endsWith('/') ? o.slice(0, -1) : o); 
+
+  app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }));
+
   app.use(json());
-
-  // All /api/v1/orders routes
-//   app.use('/api/v1/orders', authMiddleware, orderRoutes);
+  app.use(cookieParser());
   app.use('/api/v1/orders', orderRoutes);
-
-  // Global error handler
   app.use(errorHandler);
 
-  app.listen(PORT, () =>
-    console.log(`Order service running on port ${PORT}`)
+  // create HTTP server & Socket.IO
+  const server = http.createServer(app);
+  
+  // Fix 2: Use the same origin value for Socket.IO CORS
+  io = new SocketIOServer(server, { 
+    cors: { 
+      origin: allowedOrigins,
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true
+    } 
+  });
+
+  io.on('connection', socket => {
+    console.log('▶ client connected', socket.id);
+    socket.on('disconnect', () => {
+      console.log('◀ client disconnected', socket.id);
+    });
+  });
+  app.locals.io = io;
+
+  server.listen(PORT, () =>
+    console.log(`Order service + Socket.IO running on port ${PORT}`)
   );
 }
 

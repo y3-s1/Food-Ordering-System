@@ -21,6 +21,7 @@ services:
       - cart-service
       - restaurant-service
       - user-service
+      - payment-service
 
   delivery-service:
     build: ./services/delivery-service
@@ -91,6 +92,15 @@ services:
   #   tty: true
   #   depends_on:
   #     - api-gateway
+
+  delivery-rider-frontend:
+    build: ./delivery-rider-frontend
+    container_name: delivery-rider-frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api-gateway
+
 
 volumes:
   mongo_data:

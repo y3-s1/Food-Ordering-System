@@ -8,12 +8,20 @@ import {
 } from "@stripe/react-stripe-js";
 import paymentApi from "../../api/paymentApi"; 
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { updateOrderStatus } from "../../services/order/orderService";
+
+interface LocationState {
+  orderId: string;
+  amount: number;
+}
 
 export default function CheckoutPage() {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { orderId, amount } = state as LocationState;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +30,7 @@ export default function CheckoutPage() {
     const createPaymentIntent = async () => {
       try {
         const res = await paymentApi.post("/payments/create-payment-intent", {
-          amount: 1000, // This means ₨10.00 if currency is LKR
+          amount, // This means ₨10.00 if currency is LKR
         });
         setClientSecret(res.data.clientSecret);
       } catch (err) {
@@ -37,26 +45,38 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements || !clientSecret) return;
-
+  
     setLoading(true);
-
+  
     const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: elements.getElement(CardNumberElement)!,
       },
     });
-
+  
     if (result.error) {
       console.error(result.error);
       toast.error(result.error.message || "Payment failed");
-      navigate("/payment-failure");
-    } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
-      toast.success("🎉 Payment Successful!");
-      navigate("/payment-success");
+  
+      // 1) update to PaymentFail
+      await updateOrderStatus(orderId, 'PaymentFail');
+  
+      // 2) go back so user can retry or choose another method
+      navigate(-1);
     }
-
+    else if (result.paymentIntent?.status === "succeeded") {
+      toast.success("🎉 Payment Successful!");
+  
+      // 1) update to Confirmed
+      await updateOrderStatus(orderId, 'Confirmed');
+  
+      // 2) proceed to confirmation
+      navigate(`/order/confirm/${orderId}`);
+    }
+  
     setLoading(false);
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

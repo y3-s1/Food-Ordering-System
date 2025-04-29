@@ -5,23 +5,33 @@ import { JWT_SECRET } from '../config';
 export interface AuthRequest extends Request {
   userId?: string;
   cartId?: string;
+  userRole?: string;
 }
 
+// authenticate request token and role
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
-  const auth = req.headers.authorization;
-  const guest = req.headers['x-cart-id'] as string;
-  if (auth && auth.startsWith('Bearer ')) {
+  const token = req.cookies.token;
+  const guestCartId = req.cookies.cartId;
+
+  if (token) {
     try {
-      const payload = jwt.verify(auth.split(' ')[1], JWT_SECRET) as any;
-      req.userId = payload.userId;
+      const payload = jwt.verify(token, JWT_SECRET) as any;
+      req.userId = payload._id;
+      req.userRole = payload.role;
+      if (payload.cartId) {
+        req.cartId = payload.cartId;
+      }
+      
       return next();
-    } catch {
-      return res.status(401).json({ error: 'Invalid token' });
+    } catch (error) {
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return
     }
-  } else if (guest) {
-    req.cartId = guest;
+  } else if (guestCartId) {
+    req.cartId = guestCartId;
     return next();
   } else {
-    return res.status(401).json({ error: 'No credentials provided' });
+    res.status(401).json({ error: 'No credentials provided' });
+    return
   }
 }

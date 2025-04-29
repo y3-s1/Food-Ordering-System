@@ -2,15 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { OrderDTO } from '../../../types/order/order';
 import { fetchOrders } from '../../../services/order/orderService';
 import OrderList from './OrderList';
+import { useAuth } from '../../../auth/AuthContext';
 
 type TabKey = 'Completed' | 'OnProgress' | 'Canceled';
 
 export default function OrderHistory() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<OrderDTO[]>([]);
   const [selectedTab, setSelectedTab] = useState<TabKey>('OnProgress');
+  const userId = user?._id
 
   useEffect(() => {
-    fetchOrders().then(setOrders);
+    fetchOrders(userId).then(setOrders);
   }, []);
 
   const filteredOrders = orders.filter(order => {
