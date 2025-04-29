@@ -1,7 +1,7 @@
-import React, { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { placeOrder } from '../../services/order/orderService';
-import type { CreateOrderDTO, DeliveryOption, OrderItemDTO, PaymentMethod } from '../../types/order/order';
+import type { CreateOrderDTO, DeliveryOption, PaymentMethod } from '../../types/order/order';
 import { OrderDraft } from '../../types/cart/cart';
 import { getRestaurantById } from '../../services/resturent/restaurantService';
 import { useAuth } from '../../auth/AuthContext';
@@ -84,6 +84,7 @@ export function OrderFormPage() {
         ...f,
         customerId: user._id,
         customerName: user.name,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         customerPhone: (user as any).phoneNumber || f.customerPhone,
         customerEmail: user.email
       }));
@@ -114,20 +115,20 @@ export function OrderFormPage() {
     updateField('paymentMethod', opt);
   }
 
-  function updateItem(idx: number, item: Partial<OrderItemDTO>) {
-    setForm(f => {
-      const items = [...f.items];
-      items[idx] = { ...items[idx], ...item };
-      return { ...f, items };
-    });
-  }
+  // function updateItem(idx: number, item: Partial<OrderItemDTO>) {
+  //   setForm(f => {
+  //     const items = [...f.items];
+  //     items[idx] = { ...items[idx], ...item };
+  //     return { ...f, items };
+  //   });
+  // }
 
-  function addItem() {
-    setForm(f => ({
-      ...f,
-      items: [...f.items, { menuItemId: '', name: '', imageUrl: '', quantity: 1, unitPrice: 0 }]
-    }));
-  }
+  // function addItem() {
+  //   setForm(f => ({
+  //     ...f,
+  //     items: [...f.items, { menuItemId: '', name: '', imageUrl: '', quantity: 1, unitPrice: 0 }]
+  //   }));
+  // }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

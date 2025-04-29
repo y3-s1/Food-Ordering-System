@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { OrderDTO } from '../../../types/order/order';
 import { fetchOrders } from '../../../services/order/orderService';
 import OrderList from './OrderList';
@@ -13,8 +13,8 @@ export default function OrderHistory() {
   const userId = user?._id
 
   useEffect(() => {
-    fetchOrders(userId).then(setOrders);
-  }, []);
+    fetchOrders(userId!).then(setOrders);
+  }, [userId]);
 
   const filteredOrders = orders.filter(order => {
     if (selectedTab === 'Completed') return order.status === 'Delivered';

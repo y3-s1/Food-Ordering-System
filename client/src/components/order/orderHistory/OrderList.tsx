@@ -1,4 +1,4 @@
-import React from 'react';
+
 import OrderCard from './OrderCard';
 import { OrderDTO } from '../../../types/order/order';
 
