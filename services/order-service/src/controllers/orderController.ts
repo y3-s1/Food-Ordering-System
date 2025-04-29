@@ -1,3 +1,4 @@
+import { Restaurant } from './../../../../restaurant-service-frontend/src/types/types';
 import { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { acceptOrder, cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder, rejectOrder, updateOrderStatus } from '../services/orderService';
@@ -111,11 +112,10 @@ export const acceptOrderController = async (req: Request, res: Response, next: N
   const io = req.app.locals.io as SocketIOServer;
   try {
     const { orderId } = req.params;
-    // const restaurantId = (req as any).userId; 
-    const restaurantId = '680b4f35b02ac7fdd10ed49d'; 
+    const restaurantId = req.body.restaurantId; 
     const order = await acceptOrder(orderId, restaurantId);
 
-    await axios.post('http://localhost:8081/api/deliveries/api/deliveries/', {
+    await axios.post(`${process.env.DELIVERY_URL}/api/deliveries/`, {
       orderId: order._id,
       deliveryAddress: order.deliveryAddress,
       location: order.location,

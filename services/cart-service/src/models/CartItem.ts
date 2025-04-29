@@ -1,6 +1,7 @@
 import { Schema, Document } from 'mongoose';
 
 export interface ICartItem extends Document {
+  _doc: any;
   restaurantId: string;
   menuItemId: string;
   name: string;

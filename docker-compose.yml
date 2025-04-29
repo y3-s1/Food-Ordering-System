@@ -21,6 +21,7 @@ services:
       - cart-service
       - restaurant-service
       - user-service
+      - payment-service
 
   delivery-service:
     build: ./services/delivery-service

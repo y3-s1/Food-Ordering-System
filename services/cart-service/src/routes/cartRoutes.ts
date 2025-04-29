@@ -1,4 +1,3 @@
-/* services/cart-service/src/routes/cartRoutes.ts */
 import { Router } from 'express';
 import {
   getCart,
@@ -9,6 +8,7 @@ import {
   generateDraft
 } from '../controllers/cartController';
 import { authMiddleware } from '../middleware/auth';
+import { roleGuard } from '../middleware/roleGuard';
 
 const router = Router();
 router.use(authMiddleware);
@@ -21,6 +21,6 @@ router.delete('/items/:itemId', removeItem);
 router.delete('/', clearCart);
 
 // Checkout draft
-router.get('/draft', generateDraft);
+router.get('/draft', roleGuard(['customer']), generateDraft);
 
 export default router;
