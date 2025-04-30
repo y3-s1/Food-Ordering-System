@@ -23,7 +23,7 @@ router.get('/', authMiddleware, roleGuard(['admin']), getOrders);
 // Customer and admin endpoints
 router.post('/', authMiddleware, roleGuard(['customer', 'admin']), placeOrder);
 router.get('/user/:userId', authMiddleware, roleGuard(['customer', 'admin']), getUserOrders);
-router.get('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), getOrder);
+router.get('/:orderId', authMiddleware, roleGuard(['customer', 'admin', 'deliveryAgent']), getOrder);
 router.put('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), modifyOrder);
 router.delete('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), cancelOrder);
 router.get('/:orderId/status', authMiddleware, roleGuard(['customer', 'admin']), getStatus);
