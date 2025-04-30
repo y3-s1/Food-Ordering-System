@@ -16,8 +16,9 @@ const CartItemComponent: React.FC<Props> = ({
   onRemove,
   onUpdateItem = (updatedItem) => onUpdateQty(updatedItem._id, updatedItem.quantity)
 }) => {
-  const { _id, name, imageUrl, quantity, unitPrice, options } = item;
+  const { _id, name, imageUrl, quantity, unitPrice } = item;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
     <>
@@ -32,7 +33,6 @@ const CartItemComponent: React.FC<Props> = ({
         />
         <div className="flex-1">
           <h3 className="font-medium">{name}</h3>
-          {options && <p className="text-sm text-gray-500">{options}</p>}
           <p className="mt-1">LKR {unitPrice.toFixed(2)}</p>
           <div className="mt-2 flex items-center justify-between">
             <QuantityControl
@@ -57,7 +57,7 @@ const CartItemComponent: React.FC<Props> = ({
       {isModalOpen && (
         <FoodItemModal
           item={item}
-          onClose={setIsModalOpen(false)}
+          onClose={closeModal}
           onUpdate={onUpdateItem}
           onRemove={onRemove}
         />

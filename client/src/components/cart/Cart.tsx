@@ -1,5 +1,5 @@
 // src/components/cart/CartComponent.tsx
-import React, { FC, useState, useRef, useEffect } from 'react';
+import { FC, useState, useRef, useEffect } from 'react';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import CartItemComponent from './CartItem';
 import { Cart, CartItem } from '../../types/cart/cart';

@@ -27,7 +27,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'restaurant-service' });
 });
 
-// Routes
+// ✅ Routes
 app.use('/api/restaurants', restaurantRoutes);
 
 // Error Handling Middleware
@@ -35,5 +35,5 @@ app.use(errorHandler);
 
 // Connect to DB and start server
 connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Restaurant service running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`🚀 Restaurant service running at http://localhost:${PORT}`));
 });

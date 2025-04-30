@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 import { X, User, LogOut, List } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
@@ -13,7 +13,6 @@ const SidebarDrawer: FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
   const { logout } = useAuth();
 
   const handleLogout = () => {
-    // TODO: Add your logout logic here (e.g., clear auth tokens, call API)
     logout();
     navigate('/');
     onClose();

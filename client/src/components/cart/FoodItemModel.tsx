@@ -24,10 +24,10 @@ const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, 
     }
   };
 
-  const handleCloseClick = () => {
-    onClose();
-    console.log("onClose called");
-  };
+  const handleCloseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onClose();
+    };
 
   const handleUpdateClick = () => {
     onUpdate({
@@ -60,7 +60,7 @@ const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, 
           <div className="flex p-4 items-center">
             <button 
               type="button"
-              onClick={handleCloseClick}
+              onClick={(e) => handleCloseClick(e)}
               className="text-gray-600 hover:bg-gray-100 p-1 rounded-full"
             >
               <X size={24} />

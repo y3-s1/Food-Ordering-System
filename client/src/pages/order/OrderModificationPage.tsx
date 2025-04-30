@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { XCircle, CheckCircle } from 'lucide-react';
 import { OrderDTO, OrderItemDTO } from '../../types/order/order';
@@ -47,26 +47,32 @@ export default function OrderModificationPage() {
     setSaving(true);
     try {
       await modifyOrder(order._id, {
-          items: items.map(i => ({ ...i })),
-          notes,
-          _id: '',
-          customerId: '',
-          restaurantId: '',
-          fees: {
-              deliveryFee: 0,
-              serviceFee: 0,
-              tax: 0
-          },
-          totalPrice: 0,
-          status: 'PendingPayment',
-          deliveryAddress: {
-              street: '',
-              city: '',
-              postalCode: '',
-              country: ''
-          },
-          createdAt: '',
-          updatedAt: ''
+        items: items.map(i => ({ ...i })),
+        notes,
+        _id: '',
+        customerId: '',
+        restaurantId: '',
+        fees: {
+          deliveryFee: 0,
+          serviceFee: 0,
+          tax: 0
+        },
+        totalPrice: 0,
+        status: 'PendingPayment',
+        deliveryAddress: {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        },
+        createdAt: '',
+        updatedAt: '',
+        deliveryOption: 'Standard',
+        paymentMethod: 'Card',
+        location: {
+          lat: 0,
+          lng: 0
+        }
       });
       navigate(-1);
     } catch {
