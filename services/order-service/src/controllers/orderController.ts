@@ -1,4 +1,3 @@
-import { Restaurant } from './../../../../restaurant-service-frontend/src/types/types';
 import { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { acceptOrder, cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder, rejectOrder, updateOrderStatus } from '../services/orderService';
