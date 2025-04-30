@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Delivery Service Axios
 export const deliveryApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/deliveries`,
+  baseURL: `${API_BASE_URL}/api/deliveries/api/deliveries`,
   headers: {
     'Content-Type': 'application/json',
   },
