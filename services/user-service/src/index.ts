@@ -20,7 +20,8 @@ const app: Application = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Frontend URL
+  // origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Frontend URL
+  origin: ['http://localhost:5173', 'http://localhost:3002' , 'http://localhost:3001', 'http://localhost:3003'], // Frontend URL
   credentials: true,
   optionsSuccessStatus: 200
 };

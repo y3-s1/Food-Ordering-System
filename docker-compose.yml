@@ -83,15 +83,15 @@ services:
     depends_on:
       - mongo
 
-  # client:
-  #   build: ./client
-  #   container_name: client
-  #   ports:
-  #     - "3000:3000"
-  #   stdin_open: true
-  #   tty: true
-  #   depends_on:
-  #     - api-gateway
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "3002:3002"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - api-gateway
 
   delivery-rider-frontend:
     build: ./delivery-rider-frontend
