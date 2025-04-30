@@ -1,17 +1,31 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DeliveryDetails from './pages/DeliveryDetails';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/dashboard" element={
-        localStorage.getItem('rider') ? <Dashboard /> : <Navigate to="/login" />
-      } />
-      <Route path="/delivery/:id" element={<DeliveryDetails />} />
+      
+      <Route 
+        path="/dashboard" 
+        element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        } 
+      />
+
+      <Route 
+        path="/delivery/:id" 
+        element={
+          <PrivateRoute>
+            <DeliveryDetails />
+          </PrivateRoute>
+        } 
+      />
     </Routes>
   );
 }
