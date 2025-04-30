@@ -34,6 +34,6 @@ router.put('/:orderId/accept', authMiddleware, roleGuard(['restaurant']), accept
 router.put('/:orderId/reject', authMiddleware, roleGuard(['restaurant']), rejectOrderController);
 
 // Delivery and restaurant
-router.put('/:orderId/status', authMiddleware, roleGuard(['restaurant', 'delivery']), updateStatusController);
+router.put('/:orderId/status', authMiddleware, roleGuard(['restaurant', 'deliveryRider', 'customer']), updateStatusController);
 
 export default router;

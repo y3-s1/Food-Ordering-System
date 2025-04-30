@@ -19,7 +19,6 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
-import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
 
@@ -48,7 +47,8 @@ function AppContent() {
             path="/cart"
             element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
           />
-          <Route path="/cart/item" element={<FoodItemModel />} />
+          <Route path="/customer-dashboard" element={<RestaurantList/>}/>
+          <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
 
           {/* Auth Routes */}
           <Route path="/" element={<Login />} />
