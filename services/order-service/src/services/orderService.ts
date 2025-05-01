@@ -231,6 +231,7 @@ export async function updateOrderStatus(
 
   const allowed: Record<string, string[]> = {
     PendingPayment: ['Confirmed', 'PaymentFail'],
+    PaymentFail: ['Confirmed'],
     Confirmed:       ['Preparing'],
     Preparing:       ['OutForDelivery'],
     OutForDelivery:  ['Delivered'],
