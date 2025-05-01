@@ -41,7 +41,7 @@ const Navbar: React.FC = () => {
             <Link to="/dashboard" className={getLinkClassName('/dashboard')}>Dashboard</Link>
           </li>
           <li>
-            <Link to="/add-restaurant" className={getLinkClassName('/add-restaurant')}>Add Restaurant</Link>
+            <Link to="#" className={getLinkClassName('/add-restaurant')}>Orders</Link>
           </li>
           <li>
             <button 
