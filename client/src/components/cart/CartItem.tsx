@@ -1,7 +1,7 @@
 import React from 'react';
 import QuantityControl from './QuantityControl';
 import { CartItem } from '../../types/cart/cart'; // Make sure the import matches your actual file name
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 // import FoodItemModal from './FoodItemModel';
 
 interface Props {

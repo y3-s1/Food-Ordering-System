@@ -5,7 +5,7 @@ import CartComponent from '../../components/cart/Cart';
 import {  OrderDraft } from '../../types/cart/cart';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../auth/AuthContext';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 
 const CartPage: React.FC = () => {
   // const [loading, setLoading] = useState(true);

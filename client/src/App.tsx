@@ -22,7 +22,7 @@ import CheckoutPage from './pages/payment/CheckoutPage';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
 import CartDrawer from './components/cart/CartDrawer';
-import { useCart } from './context/CartContext';
+import { useCart } from './context/cartContext';
 
 function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');

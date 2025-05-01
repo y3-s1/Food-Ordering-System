@@ -4,7 +4,7 @@ import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-r
 // import CartDrawer from '../cart/CartDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import SidebarDrawer from './SidebarDrawer';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 
 const Navbar: FC = () => {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');

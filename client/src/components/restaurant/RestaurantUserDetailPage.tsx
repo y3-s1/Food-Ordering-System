@@ -5,7 +5,7 @@ import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/re
 import { updateItemQuantity } from '../../services/cart/cartService';
 import { Cart } from '../../types/cart/cart';
 // import CartDrawer from '../../components/cart/CartDrawer';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/cartContext';
 // import { useMediaQuery } from '../../hooks/useMediaQuery';
 // import CartComponent from '../cart/Cart';
 
