@@ -133,10 +133,10 @@ export async function modifySelectOrder(
   const order = await Order.findById(orderId);
   if (!order) throw { status: 404, message: 'Order not found' };
 
-  if (order.status !== 'PendingPayment') {
+  if (order.status !== 'PendingPayment' && order.status !== 'Confirmed') {
     throw { status: 400, message: 'Order cannot be modified at this stage' };
   }
-
+  
   console.log('dto', dto)
 
   if (dto.items) {
