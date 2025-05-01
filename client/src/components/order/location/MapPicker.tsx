@@ -1,5 +1,6 @@
 // src/components/MapPicker.tsx
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import type { LeafletMouseEvent, LeafletEvent, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface MapPickerProps {
@@ -9,7 +10,7 @@ interface MapPickerProps {
 
 function ClickHandler({ onChange }: Pick<MapPickerProps, 'onChange'>) {
   useMapEvents({
-    click(e) {
+    click(e: LeafletMouseEvent) {
       onChange({ lat: e.latlng.lat, lng: e.latlng.lng });
     }
   });
@@ -19,7 +20,7 @@ function ClickHandler({ onChange }: Pick<MapPickerProps, 'onChange'>) {
 export function MapPicker({ position, onChange }: MapPickerProps) {
   return (
     <MapContainer
-      center={[position.lat, position.lng]}
+      center={[position.lat, position.lng]  as LatLngExpression}
       zoom={13}
       style={{ height: 300, width: '100%' }}
     >
@@ -27,10 +28,10 @@ export function MapPicker({ position, onChange }: MapPickerProps) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <Marker
-        position={[position.lat, position.lng]}
-        draggable
+        position={[position.lat, position.lng]  as LatLngExpression}
+        draggable={true}
         eventHandlers={{
-          dragend(e) {
+          dragend(e: LeafletEvent) {
             const { lat, lng } = e.target.getLatLng();
             onChange({ lat, lng });
           }
