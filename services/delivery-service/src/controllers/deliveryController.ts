@@ -117,7 +117,7 @@ export const createDelivery: RequestHandler = async (req, res): Promise<void> =>
 
 
 
-// 3. Update delivery status
+// 2. Update delivery status
 export const updateStatus: RequestHandler = async (req, res) => {
   try {
     const { status } = req.body;
@@ -149,7 +149,7 @@ export const updateStatus: RequestHandler = async (req, res) => {
 };
 
 
-// 4. Get delivery by ID
+// 3. Get delivery by ID
 export const getDeliveryById: RequestHandler = async (req, res) => {
   try {
     const delivery = await Delivery.findById(req.params.id);
@@ -163,7 +163,7 @@ export const getDeliveryById: RequestHandler = async (req, res) => {
   }
 };
 
-// 5. Get available drivers
+// 4. Get available drivers
 export const getAvailableDrivers: RequestHandler = async (_req, res) => {
   try {
     const drivers = await DriverStatus.find({ isAvailable: true });
@@ -173,7 +173,7 @@ export const getAvailableDrivers: RequestHandler = async (_req, res) => {
   }
 };
 
-// 6. Register driver status
+// 5. Register driver status
 export const registerDriverStatus: RequestHandler = async (req, res) => {
   try {
     const { userId, lat, lng } = req.body;
@@ -196,7 +196,7 @@ export const registerDriverStatus: RequestHandler = async (req, res) => {
   }
 };
 
-// 7. Update real-time location
+// 6. Update real-time location
 export const updateDriverLocation: RequestHandler = async (req, res) => {
   try {
     const { lat, lng } = req.body;
@@ -219,7 +219,7 @@ export const updateDriverLocation: RequestHandler = async (req, res) => {
   }
 };
 
-// 8. Get all deliveries assigned to a specific driver
+// 7. Get all deliveries assigned to a specific driver
 export const getDeliveriesByDriver: RequestHandler = async (req, res) => {
   try {
     const { driverId } = req.query;
@@ -237,7 +237,7 @@ export const getDeliveriesByDriver: RequestHandler = async (req, res) => {
 };
 
 
-// 9. Toggle driver's online/offline status
+// 8. Toggle driver's online/offline status
 export const updateDriverAvailability: RequestHandler = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -276,5 +276,51 @@ export const updateDriverAvailability: RequestHandler = async (req, res) => {
   } catch (err) {
     console.error('Failed to update driver availability:', err);
     res.status(500).json({ message: 'Failed to update driver status', error: err });
+  }
+};
+
+
+
+// 9. Live tracking info by orderId
+export const getLiveTrackingInfo: RequestHandler = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      res.status(400).json({ error: 'Invalid orderId' });
+      return;
+    }
+
+    const delivery = await Delivery.findOne({ orderId: new mongoose.Types.ObjectId(orderId) });
+
+    if (!delivery) {
+      res.status(404).json({ error: 'Delivery not found for this order' });
+      return;
+    }
+
+    if (!delivery.driverId) {
+      res.status(400).json({ error: 'No driver assigned yet' });
+      return;
+    }
+
+    const driverStatus = await DriverStatus.findOne({ userId: delivery.driverId });
+
+    if (!driverStatus) {
+      res.status(404).json({ error: 'Driver location not available' });
+      return;
+    }
+
+    res.json({
+      status: delivery.status,
+      driverLocation: driverStatus.currentLocation,
+      deliveryAddress: delivery.deliveryAddress,
+      deliveryLocation: delivery.location,
+      restaurantLocation: delivery.resLocation,
+      estimatedTime: delivery.estimatedTime,
+    });
+    return;
+  } catch (err) {
+    console.error('Live tracking error:', err);
+    res.status(500).json({ error: 'Failed to fetch tracking info' });
   }
 };
