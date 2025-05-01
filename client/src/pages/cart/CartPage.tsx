@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchCart, updateItemQuantity, removeItem, clearCart, fetchDraft } from '../../services/cart/cartService';
+import { fetchDraft } from '../../services/cart/cartService';
 import CartComponent from '../../components/cart/Cart';
-import { Cart, OrderDraft } from '../../types/cart/cart';
+import {  OrderDraft } from '../../types/cart/cart';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../auth/AuthContext';
+import { useCart } from '../../context/CartContext';
 
 const CartPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<Cart>({
-    items: [],
-    discountAmount: 0,
-    subtotal: 0,
-    fees: { deliveryFee: 0, serviceFee: 0, tax: 0 },
-    total: 0,
-  });
+  // const [loading, setLoading] = useState(true);
+  const { cart, loading, updateQty, removeCartItem, emptyCart, refreshCart } = useCart();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -29,30 +24,20 @@ const CartPage: React.FC = () => {
   }, [isDesktop, navigate]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchCart()
-      .then(cart => {
-        setCart(cart);
-        console.log('cart-new', cart)
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching cart:', error);
-        setLoading(false);
-      });
+    refreshCart();
   }, [user]);
 
   const handleUpdateQty = (id: string, qty: number) => {
     if (qty < 1) return;
-    updateItemQuantity(id, qty).then(setCart);
+    updateQty(id, qty);
   };
 
   const handleRemove = (id: string) => {
-    removeItem(id).then(setCart);
+    removeCartItem(id);
   };
 
   const handleClearCart = () => {
-    clearCart().then(setCart);
+    emptyCart();
   };
 
   const handlePlaceOrder = async () => {
