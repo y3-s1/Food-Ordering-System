@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { XCircle, CheckCircle } from 'lucide-react';
 import { OrderDTO, OrderItemDTO } from '../../types/order/order';
 import { fetchOrderById, modifyOrder } from '../../services/order/orderService';
-
+import { getRestaurantById } from '../../services/resturent/restaurantService';
+import { IRestaurant } from '../../types/restaurant/restaurant';
+import { MapModal } from '../../components/order/location/MapModal';
 export default function OrderModificationPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -13,23 +15,44 @@ export default function OrderModificationPage() {
   const [address, setAddress] = useState(order?.deliveryAddress || {
     street: '', city: '', postalCode: '', country: ''
   });
+  // New state for location (latitude, longitude)
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+  );
+  const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prompt states
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [isPickingOnMap, setIsPickingOnMap] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
     fetchOrderById(orderId)
       .then(res => {
-        setOrder(res.data);
-        setItems(res.data.items);
-        setNotes(res.data.notes || '');
-        setAddress(res.data.deliveryAddress);
+        const o = res.data;
+        setOrder(o);
+        setItems(o.items);
+        setNotes(o.notes || '');
+        setAddress(o.deliveryAddress);
+        if (o.location) {
+          setLocation(o.location);
+        }
       })
-      .catch(() => setError('Unable to load order.'))
+      .catch(() => setError('Unable to load order or restaurant details.'))
       .finally(() => setLoading(false));
   }, [orderId]);
 
+  useEffect(() => {
+    if (order?.restaurantId) {
+      getRestaurantById(order.restaurantId)
+        .then(res => setRestaurant(res))
+        .catch(err => console.error('Failed to load restaurant', err));
+    }
+  }, [order?.restaurantId]);
+
+  // Handlers for quantity, removal, address unchanged...
   const handleQuantityChange = (idx: number, qty: number) => {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: qty } : it));
   };
@@ -42,37 +65,46 @@ export default function OrderModificationPage() {
     setAddress(prev => ({ ...prev, [field]: value }));
   };
 
+  // Show the prompt
+  const handleUpdateLocationClick = () => {
+    setShowLocationPrompt(true);
+  };
+
+  // Use current GPS location
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setLocation(coords);
+        setShowLocationPrompt(false);
+      },
+      err => {
+        console.error('Error getting location', err);
+        alert('Unable to retrieve your location.');
+      }
+    );
+  };
+
+  // Start picking on map
+  const pickOnMap = () => {
+    setIsPickingOnMap(true);
+  };
+
+  // Save changes
   const handleSave = async () => {
     if (!order) return;
     setSaving(true);
     try {
       await modifyOrder(order._id, {
-        items: items.map(i => ({ ...i })),
+        ...order,
+        items,
         notes,
-        _id: '',
-        customerId: '',
-        restaurantId: '',
-        fees: {
-          deliveryFee: 0,
-          serviceFee: 0,
-          tax: 0
-        },
-        totalPrice: 0,
-        status: 'PendingPayment',
-        deliveryAddress: {
-          street: '',
-          city: '',
-          postalCode: '',
-          country: ''
-        },
-        createdAt: '',
-        updatedAt: '',
-        deliveryOption: 'Standard',
-        paymentMethod: 'Card',
-        location: {
-          lat: 0,
-          lng: 0
-        }
+        deliveryAddress: address,
+        location: location,
       });
       navigate(-1);
     } catch {
@@ -95,12 +127,28 @@ export default function OrderModificationPage() {
         </button>
       </header>
 
+      {/* Restaurant and Delivery Option (read-only) */}
+      <section className="flex items-center bg-white p-4 rounded-lg shadow space-x-4">
+        {restaurant?.imageUrl && (
+          <img src={restaurant.imageUrl} alt={restaurant.name} className="w-16 h-16 rounded-lg object-cover" />
+        )}
+        <div className="flex-1">
+          <p className="text-lg font-semibold">{restaurant?.name || 'Restaurant'}</p>
+          <p className="text-sm text-gray-600">Delivery Option: <span className="font-medium">{order.deliveryOption}</span></p>
+        </div>
+      </section>
+
       {/* Items Editor */}
       <section className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Items</h2>
         <div className="space-y-4">
           {items.map((item, idx) => (
             <div key={item.menuItemId} className="flex items-center justify-between">
+              <img 
+                src={item.imageUrl || 'https://via.placeholder.com/48'} 
+                alt={item.name} 
+                className="w-12 h-12 bg-gray-100 rounded-lg object-cover"
+              />
               <div className="flex-1">
                 <p className="font-medium">{item.name}</p>
                 <p className="text-sm text-gray-500">Unit Price: LKR {item.unitPrice.toFixed(2)}</p>
@@ -137,9 +185,9 @@ export default function OrderModificationPage() {
         />
       </section>
 
-      {/* Delivery Address Editor */}
-      <section className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
+      {/* Delivery Address Editor & Location */}
+      <section className="bg-white p-6 rounded-lg shadow space-y-4">
+        <h2 className="text-xl font-semibold">Delivery Address & Location</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             value={address.street}
@@ -166,6 +214,15 @@ export default function OrderModificationPage() {
             className="border rounded p-2"
           />
         </div>
+        <button
+          onClick={handleUpdateLocationClick}
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Update Location
+        </button>
+        {location && (
+          <p className="text-sm text-gray-600">Current coordinates: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}</p>
+        )}
       </section>
 
       {/* Action Buttons */}
@@ -185,6 +242,42 @@ export default function OrderModificationPage() {
           <CheckCircle className="w-5 h-5 mr-2" /> Save Changes
         </button>
       </div>
+
+      {/* Location Prompt Popup */}
+      {showLocationPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4">
+              We need your delivery location
+            </h3>
+            <div className="space-y-4">
+              <button
+                className="w-full py-2 bg-blue-600 text-white rounded"
+                onClick={useCurrentLocation}
+              >
+                Use current location
+              </button>
+              <button
+                className="w-full py-2 border rounded"
+                onClick={pickOnMap}
+              >
+                Pick on map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map Picker Modal */}
+      <MapModal
+        isOpen={isPickingOnMap}
+        position={location || { lat: 0, lng: 0 }}
+        onChange={pos => setLocation(pos)}
+        onClose={() => {
+          setIsPickingOnMap(false);
+          setShowLocationPrompt(false);
+        }}
+      />
     </div>
   );
 }

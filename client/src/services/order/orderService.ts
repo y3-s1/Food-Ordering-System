@@ -21,3 +21,6 @@ export const modifyOrder = (orderId: string, data: OrderDTO) =>
 
 export const updateOrderStatus = (orderId: string, status: string) =>
   orderApi.put<OrderDTO>(`/${orderId}/status`, { status });
+
+export const cancelOrderById = (orderId: string) =>
+  orderApi.delete<{ message: string }>(`/${orderId}`);
