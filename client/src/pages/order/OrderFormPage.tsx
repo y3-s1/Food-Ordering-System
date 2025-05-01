@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { placeOrder } from '../../services/order/orderService';
+import { placeOrder, updateOrderStatus } from '../../services/order/orderService';
 import type { CreateOrderDTO, DeliveryOption, PaymentMethod } from '../../types/order/order';
 import { OrderDraft } from '../../types/cart/cart';
 import { getRestaurantById } from '../../services/resturent/restaurantService';
@@ -159,6 +159,8 @@ export function OrderFormPage() {
     if (payload.paymentMethod === 'Card') {
       navigate('/checkout', { state: { orderId, amount: Math.round(total * 100) } });
     } else {
+      await updateOrderStatus(orderId, 'Confirmed');
+      
       navigate(`/order/confirm/${orderId}`);
     }
   }
