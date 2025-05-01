@@ -22,10 +22,13 @@ import CheckoutPage from './pages/payment/CheckoutPage';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
 import LiveTrackingPage from './pages/delivery/LiveTrackingPage';
+import CartDrawer from './components/cart/CartDrawer';
+import { useCart } from './context/cartContext';
 
 function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const location = useLocation();
+  const { cartOpen, setCartOpen } = useCart();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
@@ -70,6 +73,10 @@ function AppContent() {
         {/* Show Footer only if NOT admin */}
         {!isAdminRoute && <Footer />}
       </main>
+      <CartDrawer 
+        isOpen={cartOpen} 
+        onClose={() => setCartOpen(false)} 
+      />
     </div>
   );
 }

@@ -2,22 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MenuItem, Restaurant } from '../../types/restaurant/restaurant';
 import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/restaurantService';
-import { updateItemQuantity, addToCart } from '../../services/cart/cartService';
+import { updateItemQuantity } from '../../services/cart/cartService';
 import { Cart } from '../../types/cart/cart';
-import CartDrawer from '../../components/cart/CartDrawer';
+// import CartDrawer from '../../components/cart/CartDrawer';
+import { useCart } from '../../context/cartContext';
 // import { useMediaQuery } from '../../hooks/useMediaQuery';
 // import CartComponent from '../cart/Cart';
 
 const RestaurantUserDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addItemToCart, setCartOpen } = useCart();
   
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [isCartOpen, setCartOpen] = useState(false);
 
   // Cart state with proper Cart type
   const [cart, setCart] = useState<Cart>({
@@ -90,7 +91,7 @@ const RestaurantUserDetailPage: React.FC = () => {
         notes:        ''    // or item.notes if you want to carry options
     };
 
-    console.log('cartItem', cartItem)
+    console.log('cartItem add to cart', cartItem)
     
     // Check if item already exists in cart
     const existingItem = cart.items.find(i => i.menuItemId === item._id);
@@ -101,32 +102,18 @@ const RestaurantUserDetailPage: React.FC = () => {
       handleUpdateQty(item._id, newQuantity);
     } else {
       // Add new item to cart through API
-      addToCart(cartItem)
-      .then(response => {
-        return response;
-      })
-      .then(updatedCart => {
-        setCart(updatedCart);
+      addItemToCart(cartItem)
+      .then(() => {
+        setCartOpen(true);
       })
       .catch(error => {
         console.error('Error adding item to cart:', error);
       });
     }
 
-
-    sessionStorage.setItem('openCartAfterReload', 'true');
-    navigate(0);
-
-  }, [cart.items, handleUpdateQty, navigate]);
-
-  useEffect(() => {
-    if (sessionStorage.getItem('openCartAfterReload') === 'true') {
-      setCartOpen(true);
-      sessionStorage.removeItem('openCartAfterReload');
-    }
-  }, []);
+  }, [cart, setCartOpen, handleUpdateQty, addItemToCart]);
   
-
+  
   const categories = ['all', ...new Set(menuItems.map(item => item.category))];
   
   const filteredMenuItems = activeCategory === 'all' 
@@ -202,20 +189,6 @@ const RestaurantUserDetailPage: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-800 mb-2">{restaurant.name}</h1>
               <p className="text-gray-600 mb-4">{restaurant.description}</p>
             </div>
-            <button
-              onClick={() => setCartOpen(!isCartOpen)}
-              className="relative bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors duration-300 flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-              Cart ({cart.items.reduce((total, item) => total + item.quantity, 0)})
-              {cart.items.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.items.length}
-                </span>
-              )}
-            </button>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -353,7 +326,6 @@ const RestaurantUserDetailPage: React.FC = () => {
       </div>
 
       {/* Cart integration - show CartComponent directly for desktop, CartDrawer for mobile */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 };

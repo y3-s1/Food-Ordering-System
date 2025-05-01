@@ -5,6 +5,7 @@ import type { CreateOrderDTO, DeliveryOption, PaymentMethod } from '../../types/
 import { OrderDraft } from '../../types/cart/cart';
 import { getRestaurantById } from '../../services/resturent/restaurantService';
 import { useAuth } from '../../auth/AuthContext';
+import { AddressModal } from '../../components/order/address/AddressForm';
 
 interface IRestaurant {
   _id: string;
@@ -30,6 +31,8 @@ export function OrderFormPage() {
   const [isCartOpen, setIsCartOpen] = useState(true);
   const [deliveryOption, setDeliveryOption] = useState<'Standard' | 'PickUp'>('Standard');
   const [paymentMethod, setPaymentMethod] = useState<"Card" | "Cash on Delivery">("Card");
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
+  const [addressError, setAddressError] = useState(false)
   const [form, setForm] = useState<CreateOrderDTO>({
     customerId:     draft?.customerId     || '',
     customerName:   draft?.customerName   || '',
@@ -132,6 +135,13 @@ export function OrderFormPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const { street, city, postalCode, country } = form.deliveryAddress;
+  if (!street || !city || !postalCode || !country) {
+    setAddressError(true);
+    // open the editor automatically so they can fix it:
+    setIsEditingAddress(true);
+    return;
+  }
 
     // 1) place the order in your backend
     const res = await placeOrder(form);
@@ -211,25 +221,36 @@ export function OrderFormPage() {
         {/* Delivery Details Card */}
         <section className="bg-white rounded-2xl p-6 shadow">
           <h2 className="text-xl font-semibold mb-4">Delivery details</h2>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
+          <div className="flex place-items-center justify-between mb-3">
+            <div className="flex place-items-start space-x-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9-4 9 4v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" /></svg>
-              <div>
+              <div className="place-items-start">
                 <p className="font-medium">{form.deliveryAddress.street || 'Select address'}</p>
-                <p className="text-sm text-gray-500">{form.deliveryAddress.city}</p>
+                <p >{form.deliveryAddress.city}</p>
               </div>
             </div>
-            <button className="text-blue-600 hover:underline">Edit</button>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               <p className="text-gray-700">{form.notes || 'Add delivery instructions'}</p>
             </div>
-            <button className="text-blue-600 hover:underline">Edit</button>
+            <button
+                onClick={() => {
+                  setAddressError(false);
+                  setIsEditingAddress(true);
+                }}
+                className="text-blue-600 hover:underline"
+              >
+                {form.deliveryAddress.street ? 'Edit' : 'Add'} address
+              </button>
           </div>
         </section>
-
+        {addressError && (
+          <p className="mt-2 text-sm text-red-600">
+            Please fill in your delivery address to continue.
+          </p>
+        )}
         {/* Delivery Options Card */}
         <section className="bg-white rounded-2xl p-6 shadow">
           <h2 className="text-xl font-semibold mb-4">Delivery options</h2>
@@ -375,12 +396,12 @@ export function OrderFormPage() {
           ) : (
             <p>Loading restaurant information…</p>
           )}
-          <button
+          {/* <button
             onClick={onSubmit}
             className="hidden lg:block w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
           >
             Continue to payment
-          </button>
+          </button> */}
         </section>
 
         {/* Cart Summary & Promotion & Total */}
@@ -524,6 +545,16 @@ export function OrderFormPage() {
       </div>
 
       </div>
+      <AddressModal
+        isOpen={isEditingAddress}
+        address={form.deliveryAddress}
+        onChange={addr => updateField('deliveryAddress', addr)}
+        onSave={() => setIsEditingAddress(false)}
+        onCancel={() => {
+          setIsEditingAddress(false);
+          setAddressError(false);
+        }}
+      />
     </div>
   );
 }
