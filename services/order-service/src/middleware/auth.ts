@@ -9,6 +9,13 @@ export interface AuthRequest extends Request {
 
 // verify the request token
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+  // Bypass auth if internal request
+  const internalService = req.headers['x-internal-service'];
+  if (internalService === 'delivery-service') {
+    req.userRole = 'deliveryAgent';
+    return next();
+  }
+
   const token = req.cookies.token;
   if (token) {
     try {
