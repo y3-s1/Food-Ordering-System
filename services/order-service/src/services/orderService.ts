@@ -27,7 +27,17 @@ interface MenuItem { menuItemId: string; name: string; imageUrl: string; quantit
 
 interface ModifyOrderDTO {
   items?: { menuItemId: string; name: string; imageUrl: string; quantity: number; unitPrice: number }[];
+  deliveryAddress?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
   notes?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
   promotionCode?: string;
 }
 
@@ -127,6 +137,8 @@ export async function modifySelectOrder(
     throw { status: 400, message: 'Order cannot be modified at this stage' };
   }
 
+  console.log('dto', dto)
+
   if (dto.items) {
     const enriched = dto.items.map(i => ({
       menuItemId: i.menuItemId,
@@ -142,6 +154,8 @@ export async function modifySelectOrder(
 
   if (dto.notes !== undefined)       order.notes = dto.notes;
   if (dto.promotionCode !== undefined) order.promotionCode = dto.promotionCode;
+  if (dto.deliveryAddress !== undefined) order.deliveryAddress = dto.deliveryAddress;
+  if (dto.location !== undefined) order.location = dto.location;
 
   const itemsTotal = order.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
   const deliveryFee = order.fees.deliveryFee;  // or recalc if dynamic
