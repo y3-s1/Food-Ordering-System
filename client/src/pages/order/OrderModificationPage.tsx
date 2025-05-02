@@ -16,8 +16,7 @@ export default function OrderModificationPage() {
     street: '', city: '', postalCode: '', country: ''
   });
   // New state for location (latitude, longitude)
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
-  );
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,6 +97,10 @@ export default function OrderModificationPage() {
   const handleSave = async () => {
     if (!order) return;
     setSaving(true);
+    if (!location) {
+      setError('Please select a location.');
+      return;
+    }
     try {
       await modifyOrder(order._id, {
         ...order,

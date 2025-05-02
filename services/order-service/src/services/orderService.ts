@@ -2,6 +2,7 @@ import axios from 'axios';
 import Order, { IOrder } from '../models/Order';
 import mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
+import { restaurantServiceApi } from '../utils/serviceApi';
 
 interface CreateOrderDTO {
   customerId: string;
@@ -48,10 +49,10 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
 
   try {
     // Fetch all menu items for this restaurant via our GET endpoint
-    const { data: menuData } = await axios.get<
+    const { data: menuData } = await restaurantServiceApi.get<
       { _id: string; name: string; imageUrl: string; price: number }[]
     >(
-      `${process.env.RESTAURANT_URL}/api/restaurants/${dto.restaurantId}/menu-items`,
+      `/${dto.restaurantId}/menu-items`,
       { timeout: 2000 }
     );
 
