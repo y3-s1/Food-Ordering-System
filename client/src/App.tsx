@@ -45,7 +45,7 @@ function AppContent() {
           <Route path="/order/:orderId/tracking" element={<OrderTrackingPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
-          <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
+          <Route path="/order/edit/:orderId" element={<OrderModificationPage />} />
           <Route path="/order/:orderId" element={<OrderDetailPage />} />
           <Route path="/order/track/:orderId" element={<LiveTrackingPage />} />
           <Route

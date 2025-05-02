@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Restaurant } from '../../types/restaurant/restaurant';
+import { IRestaurant } from '../../types/restaurant/restaurant';
 
 interface RestaurantCardProps {
-  restaurant: Restaurant;
+  restaurant: IRestaurant;
   showApprovalStatus?: boolean;
 }
 
