@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MenuItem, Restaurant } from '../../types/restaurant/restaurant';
+import { IRestaurant, MenuItem } from '../../types/restaurant/restaurant';
 import { fetchMenuItems, fetchRestaurantById } from '../../services/resturent/restaurantService';
 import { updateItemQuantity } from '../../services/cart/cartService';
 import { Cart } from '../../types/cart/cart';
@@ -14,7 +14,7 @@ const RestaurantUserDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { addItemToCart, setCartOpen } = useCart();
   
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
