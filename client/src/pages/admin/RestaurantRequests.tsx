@@ -1,7 +1,7 @@
 // src/pages/admin/RestaurantRequests.tsx
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import restuarantApi from "../../api/restuarantApi";
+import { restaurantApi } from "../../api/axiosInstances";
 import { Loader2 } from "lucide-react";
 
 type Restaurant = {
@@ -29,8 +29,8 @@ export default function RestaurantRequests() {
     setLoading(true);
     try {
       const [pendingRes, approvedRes] = await Promise.all([
-        restuarantApi.get("/restaurants/pending"),
-        restuarantApi.get("/restaurants/approved"),
+        restaurantApi.get("/admin/pending"),
+        restaurantApi.get("/approved"),
       ]);
       setPendingRestaurants(pendingRes.data);
       setApprovedRestaurants(approvedRes.data);
@@ -43,7 +43,7 @@ export default function RestaurantRequests() {
 
   const handleApprove = async (id: string) => {
     try {
-      await restuarantApi.patch(`/restaurants/${id}/approve`);
+      await restaurantApi.patch(`/${id}/approve`);
       toast.success("Restaurant approved successfully");
       fetchRestaurants();
     } catch (err) {
@@ -53,7 +53,7 @@ export default function RestaurantRequests() {
 
   const handleReject = async (id: string) => {
     try {
-      await restuarantApi.patch(`/restaurants/${id}/reject`);
+      await restaurantApi.patch(`/${id}/reject`);
       toast.success("Restaurant rejected successfully");
       fetchRestaurants();
     } catch (err) {
