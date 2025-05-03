@@ -7,10 +7,12 @@ interface OrderItemListProps {
 }
 
 export const OrderItemList: React.FC<OrderItemListProps> = ({ items }) => (
-  <div className="bg-white shadow-sm rounded-lg p-4 mb-6">
-    <h2 className="text-lg font-semibold mb-4">Items</h2>
-    {items.map(item => (
-      <OrderItem key={item.menuItemId} item={item} />
-    ))}
+  <div className="bg-white rounded-xl p-6 shadow-md">
+    <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Order Items</h2>
+    <div className="space-y-2">
+      {items.map(item => (
+        <OrderItem key={item.menuItemId} item={item} />
+      ))}
+    </div>
   </div>
 );

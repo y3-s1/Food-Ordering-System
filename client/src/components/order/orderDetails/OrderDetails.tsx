@@ -54,65 +54,63 @@ export const OrderDetails: React.FC = () => {
   const canModify = order.status === 'PendingPayment' || order.status === 'Confirmed';
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8 bg-gray-50">
-      {/* Tracking Section */}
-      {order.status !== 'Delivered' && (
+    <div className="bg-gray-100 min-h-screen py-8">
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="space-y-6">
+          {/* Header with Status Badge and Actions */}
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-6 rounded-xl shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+              <h1 className="text-2xl font-bold text-gray-800">Order #{order._id.slice(-6)}</h1>
+              <StatusBadge status={order.status} />
+            </div>
+            
+            {canModify && (
+              <div className="flex space-x-3 mt-4 md:mt-0">
+                <button
+                  onClick={handleEdit}
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 font-medium"
+                >
+                  Edit Order
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={actionLoading}
+                  className={`px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium flex items-center ${actionLoading ? 'opacity-75' : ''}`}
+                >
+                  {actionLoading ? 'Processing...' : 'Cancel Order'}
+                </button>
+              </div>
+            )}
+          </header>
+
+          {order.status !== 'Delivered' && (
         <OrderTrackingSection />
       )}
 
-      {/* Header with Status Badge and Actions */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-4 rounded-lg shadow">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold">Order #{order._id.slice(-6)}</h1>
-          <StatusBadge status={order.status} />
-        </div>
-        {canModify && (
-          <div className="flex space-x-2 mt-4 md:mt-0">
-            <button
-              onClick={handleEdit}
-              disabled={actionLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleCancel}
-              disabled={actionLoading}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-            >
-              Cancel
-            </button>
+          {/* Items List */}
+          <OrderItemList items={order.items} />
+
+          {/* Summary and Address side by side on md+ */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <OrderSummary
+              deliveryFee={order.fees.deliveryFee}
+              serviceFee={order.fees.serviceFee}
+              tax={order.fees.tax}
+              totalPrice={order.totalPrice}
+            />
+            <AddressDetails {...order.deliveryAddress} />
           </div>
-        )}
-      </header>
 
-      {/* Items List */}
-      <section className="bg-white p-4 rounded-lg shadow">
-        <OrderItemList items={order.items} />
-      </section>
-
-      {/* Summary and Address side by side on md+ */}
-      <div className="flex flex-col md:flex-row md:space-x-6">
-        <section className="flex-1 bg-white p-4 rounded-lg shadow mb-6 md:mb-0">
-          <OrderSummary
-            deliveryFee={order.fees.deliveryFee}
-            serviceFee={order.fees.serviceFee}
-            tax={order.fees.tax}
-            totalPrice={order.totalPrice}
-          />
-        </section>
-        <section className="flex-1 bg-white p-4 rounded-lg shadow">
-          <AddressDetails {...order.deliveryAddress} />
-        </section>
+          {/* Notes */}
+          {order.notes && (
+            <div className="bg-white rounded-xl p-6 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Order Notes</h2>
+              <p className="text-gray-700 italic">{order.notes}</p>
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Notes */}
-      {order.notes && (
-        <section className="bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-2">Notes</h2>
-          <p className="text-gray-700">{order.notes}</p>
-        </section>
-      )}
     </div>
   );
 };
