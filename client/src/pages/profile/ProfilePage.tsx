@@ -1,7 +1,7 @@
+// ProfilePage.tsx
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/AuthContext";
 import userApi from "../../api/userApi";
-import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import ProfileForm from "./ProfileForm";
 import { useNavigate } from "react-router-dom";
@@ -43,7 +43,7 @@ export default function ProfilePage() {
       try {
         await userApi.delete(`/users/${profile.userId}`, { withCredentials: true });
         toast.success("Account deleted successfully");
-        logout(); // Log out user after deletion
+        logout();
         navigate("/");
       } catch (err) {
         toast.error("Failed to delete account");
@@ -53,30 +53,37 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg">
-      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">My Profile</h2>
-
-      {profile && (
-        <>
-          <ProfileForm profile={profile} onUpdate={handleUpdate} />
-
-          <div className="text-center mt-8">
-            <button
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-lg font-semibold"
-            >
-              Delete My Account
-            </button>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-lg px-8 py-10">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900">My Profile</h2>
+            <p className="mt-2 text-gray-600">Manage your account details</p>
           </div>
-        </>
-      )}
+
+          {profile && (
+            <>
+              <ProfileForm profile={profile} onUpdate={handleUpdate} />
+              
+              <div className="mt-8 border-t border-gray-200 pt-6">
+                <button
+                  onClick={handleDelete}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 font-medium"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
