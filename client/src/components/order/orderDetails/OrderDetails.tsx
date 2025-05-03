@@ -18,7 +18,6 @@ export const OrderDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
-  const hiddenStatuses = ['Delivered', 'Cancelled', 'PaymentFail'] as const;
 
   useEffect(() => {
     if (!orderId) return;
