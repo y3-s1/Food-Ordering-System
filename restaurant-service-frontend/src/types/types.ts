@@ -22,4 +22,5 @@ export type MenuItem = {
   category: string;
   isAvailable: boolean;
   restaurantId: string;
+  imageUrl: string;
 };
