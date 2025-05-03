@@ -24,6 +24,7 @@ import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDeta
 import LiveTrackingPage from './pages/delivery/LiveTrackingPage';
 import CartDrawer from './components/cart/CartDrawer';
 import { useCart } from './context/cartContext';
+import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 
 function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -54,6 +55,7 @@ function AppContent() {
           />
           <Route path="/customer-dashboard" element={<RestaurantList/>}/>
           <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
+          <Route path="/Restaurants/orders" element={<RestaurantOrderList/>}/>
 
           {/* Auth Routes */}
           <Route path="/" element={<Login />} />

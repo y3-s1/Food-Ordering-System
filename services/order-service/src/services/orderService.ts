@@ -2,7 +2,7 @@ import axios from 'axios';
 import Order, { IOrder } from '../models/Order';
 import mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
-import { restaurantServiceApi } from '../utils/serviceApi';
+import { notificationServiceApi, restaurantServiceApi, userServiceApi } from '../utils/serviceApi';
 
 interface CreateOrderDTO {
   customerId: string;
@@ -205,6 +205,32 @@ export async function acceptOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Preparing';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderPreparing',
+        payload: { orderId: order.id }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -218,6 +244,32 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Cancelled';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderCancelled',
+        payload: { orderId: order.id, reason: 'Restaurant cancelled the order' }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -249,5 +301,60 @@ export async function updateOrderStatus(
 
   order.status = newStatus;
   await order.save();
+
+  // Determine which notification to send
+  let eventType: string;
+  const payload: any = { orderId: order.id };
+
+  switch (newStatus) {
+    case 'Confirmed':
+      eventType = 'OrderConfirmed';
+      break;
+
+    case 'OutForDelivery':
+      eventType = 'OutForDelivery';
+      payload.eta = new Date(Date.now() + 30 * 60000).toISOString();
+      break;
+
+    case 'Delivered':
+      eventType = 'Delivered';
+      payload.deliveredAt = new Date().toISOString();
+      break;
+
+    case 'PaymentFail':
+      eventType = 'OrderCancelled';
+      payload.reason = 'Payment failed';
+      break;
+
+    default:
+      return order;
+  }
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType,
+        payload
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
+
   return order;
 }
