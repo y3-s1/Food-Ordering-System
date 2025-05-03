@@ -7,6 +7,7 @@ import { getRestaurantById } from '../../services/resturent/restaurantService';
 import { useAuth } from '../../auth/AuthContext';
 import { AddressModal } from '../../components/order/address/AddressForm';
 import { MapModal } from '../../components/order/location/MapModal';
+import { useCart } from '../../context/cartContext';
 
 interface IRestaurant {
   _id: string;
@@ -26,6 +27,7 @@ interface IRestaurant {
 
 export function OrderFormPage() {
   const { user } = useAuth();
+  const { emptyCart } = useCart();
   const navigate = useNavigate();
   const { state: draft } = useLocation() as { state: OrderDraft };
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
@@ -156,6 +158,9 @@ export function OrderFormPage() {
     const res = await placeOrder(payload);
     const orderId = res.data._id;
     console.log('res', res)
+
+    await emptyCart();
+
     if (payload.paymentMethod === 'Card') {
       navigate('/checkout', { state: { orderId, amount: Math.round(total * 100) } });
     } else {
