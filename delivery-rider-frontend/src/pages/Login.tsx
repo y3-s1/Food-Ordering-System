@@ -103,7 +103,7 @@ const Login = () => {
         </Card>
         <p className="text-center text-sm text-slate-500 mt-4">
           Don't have an account?{" "}
-          <a href="#" className="font-medium text-slate-900 hover:underline">
+          <a href="http://localhost:3002/register" className="font-medium text-slate-900 hover:underline">
             Sign up
           </a>
         </p>
