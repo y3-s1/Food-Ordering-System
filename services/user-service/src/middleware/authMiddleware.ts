@@ -11,6 +11,11 @@ interface AuthRequest extends Request {
 export const protect = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const token = req.cookies?.token;
 
+  const internalService = req.headers['x-internal-service'];
+  if (internalService === 'order-service') {
+    return next();
+  }
+
   if (!token) {
     res.status(401).json({ error: 'Unauthorized' });
     return;

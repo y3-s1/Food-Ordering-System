@@ -11,12 +11,22 @@ const axiosConfig = {
   }
 };
 
-export const orderServiceApi = axios.create({
+export const deliveryServiceApi = axios.create({
   baseURL: `${apiGatewayBaseUrl}/api/deliveries/api/deliveries`,
+  ...axiosConfig,
+});
+
+export const notificationServiceApi = axios.create({
+  baseURL: `${apiGatewayBaseUrl}/api/notification/api/v1/notifications`,
   ...axiosConfig,
 });
 
 export const restaurantServiceApi = axios.create({
   baseURL: `${apiGatewayBaseUrl}/api/restaurants/api/restaurants`,
+  ...axiosConfig,
+});
+
+export const userServiceApi = axios.create({
+  baseURL: `${apiGatewayBaseUrl}/api/users/api/users`,
   ...axiosConfig,
 });
