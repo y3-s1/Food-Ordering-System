@@ -34,7 +34,10 @@ export default function ManageMenu() {
       setMenuItems(menuRes.data);
       
       // Extract unique categories
-      const uniqueCategories = Array.from(new Set(menuRes.data.map((item: MenuItem) => item.category)));
+      const uniqueCategories = Array.from(
+        new Set<string>(menuRes.data.map((item: MenuItem) => item.category))
+      );
+      
       setCategories(uniqueCategories);
     } catch (err) {
       alert('Failed to load data');
