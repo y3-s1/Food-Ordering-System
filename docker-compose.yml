@@ -112,6 +112,14 @@ services:
   #   depends_on:
   #     - api-gateway
 
+  restaurant-service-frontend:
+    build: ./restaurant-service-frontend
+    container_name: restaurant-service-frontend
+    ports:
+      - "3003:3003"
+    depends_on:
+      - api-gateway
+
 
 volumes:
   mongo_data:
