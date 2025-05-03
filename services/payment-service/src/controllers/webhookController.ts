@@ -27,7 +27,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       paymentIntentId: paymentIntent.id,
       status: paymentIntent.status,
     });
-    console.log("💰 Payment saved to DB");
+    console.log(" Payment saved to DB");
   }
   
   res.json({ received: true });

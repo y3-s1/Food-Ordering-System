@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/admin/Sidebar";
 import DashboardHome from "./DashboardHome";
 import RestaurantRequests from "./RestaurantRequests";
-import ProfilePage from "../profile/ProfilePage"; // ✅ Import Profile Page
+import ProfilePage from "../profile/ProfilePage"; //  Import Profile Page
 import { Loader2 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       <div className="ml-64 flex-1 overflow-y-auto h-screen p-6">
         {selectedTab === "dashboard" && <DashboardHome />}
         {selectedTab === "restaurantRequests" && <RestaurantRequests />}
-        {selectedTab === "profile" && <ProfilePage />} {/* ✅ Add Profile Section */}
+        {selectedTab === "profile" && <ProfilePage />} {/*  Add Profile Section */}
       </div>
     </div>
   );

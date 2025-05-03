@@ -16,9 +16,11 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: ['http://localhost:5173', 'http://localhost:3002', 'http://localhost:3001', 'http://localhost:3003'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true
 }));
+
 app.use(express.json());
 app.use(cookieParser()); // For parsing cookies with token
 
