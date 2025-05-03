@@ -12,3 +12,16 @@ export const updateDeliveryStatus = async (deliveryId: string, status: string): 
   const res = await deliveryApi.put(`/${deliveryId}/status`, { status });
   return res.data;
 };
+
+export const registerDriverStatus = async (
+  userId: string,
+  lat: number,
+  lng: number
+) => {
+  const res = await deliveryApi.post('/drivers/register', {
+    userId,
+    lat,
+    lng,
+  });
+  return res.data;
+};

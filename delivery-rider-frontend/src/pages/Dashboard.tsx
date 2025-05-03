@@ -25,8 +25,17 @@ const Dashboard = () => {
   const [distanceToDelivery, setDistanceToDelivery] = useState<number | null>(null);
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(true);
+  const [driverId, setDriverId] = useState('');
 
-  const driverId = '6604e71234567890abcdefab'; // Temp
+  useEffect(() => {
+    const rider = JSON.parse(localStorage.getItem('rider') || '{}');
+    if (!rider) {
+      toast.error("You must be logged in.");
+      navigate('/login');
+    }
+    setDriverId(rider._id);
+  }, []);
+  
 
   const [confirmModal, setConfirmModal] = useState<{
     visible: boolean;
@@ -68,11 +77,15 @@ const Dashboard = () => {
   }, [driverId]); 
 
   useEffect(() => {
+    if (!driverId) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, driverId]);
+  
 
 
   useEffect(() => {
+    if (!driverId || !navigator.geolocation) return;
+    
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser');
       return;
@@ -100,10 +113,9 @@ const Dashboard = () => {
       }
     );
   
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, []);
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [driverId]);
+  
 
 
   useEffect(() => {
@@ -181,7 +193,6 @@ const Dashboard = () => {
       setUpdatingDeliveryId(null);
     }
   };
-  
   
 
   if (loading) {
