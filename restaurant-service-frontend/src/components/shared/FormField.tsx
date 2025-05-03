@@ -12,6 +12,7 @@ interface FormFieldProps {
   error?: string;
   isTextarea?: boolean;
   rows?: number;
+  step?: string | number;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -24,7 +25,8 @@ const FormField: React.FC<FormFieldProps> = ({
   required = false,
   error,
   isTextarea = false,
-  rows = 3
+  rows = 3,
+  step
 }) => {
   return (
     <div className="mb-4">
@@ -51,6 +53,7 @@ const FormField: React.FC<FormFieldProps> = ({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          step={step}
           className="w-full border border-gray-300 px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       )}
