@@ -59,6 +59,14 @@ const CartPage: React.FC = () => {
     return <div className="flex items-center justify-center h-screen">Loading cart...</div>;
   }
 
+  if (cart.items.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen text-center p-4">
+        <p className="text-xl font-medium">Your cart is empty.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-end p-6 md:justify-end md:p-0">
       <CartComponent

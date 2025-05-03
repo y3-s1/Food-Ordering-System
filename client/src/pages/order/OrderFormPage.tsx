@@ -7,6 +7,7 @@ import { getRestaurantById } from '../../services/resturent/restaurantService';
 import { useAuth } from '../../auth/AuthContext';
 import { AddressModal } from '../../components/order/address/AddressForm';
 import { MapModal } from '../../components/order/location/MapModal';
+import { useCart } from '../../context/cartContext';
 
 interface IRestaurant {
   _id: string;
@@ -26,6 +27,7 @@ interface IRestaurant {
 
 export function OrderFormPage() {
   const { user } = useAuth();
+  const { emptyCart } = useCart();
   const navigate = useNavigate();
   const { state: draft } = useLocation() as { state: OrderDraft };
   const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
@@ -37,6 +39,7 @@ export function OrderFormPage() {
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [isPickingOnMap, setIsPickingOnMap] = useState(false);
   const [locationSource, setLocationSource] = useState<'gps'|'map'|null>(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [form, setForm] = useState<CreateOrderDTO>({
     customerId:     draft?.customerId     || '',
     customerName:   draft?.customerName   || '',
@@ -102,6 +105,7 @@ export function OrderFormPage() {
     if (!locationSource) return;
   
     async function resolveLocationAndOrder() {
+      setLoadingLocation(true); 
       let coords = form.location;
       
       const pos = await getCurrentPosition();
@@ -115,12 +119,14 @@ export function OrderFormPage() {
       if (locationSource === 'map') {
         // open the map picker
         setIsPickingOnMap(true);
+        setLoadingLocation(false);
         return;
       }
   
       setShowLocationPrompt(false);
   
       await doPlaceOrder({ ...form, location: coords });
+      setLoadingLocation(false);
     }
   
     resolveLocationAndOrder();
@@ -156,6 +162,9 @@ export function OrderFormPage() {
     const res = await placeOrder(payload);
     const orderId = res.data._id;
     console.log('res', res)
+
+    await emptyCart();
+
     if (payload.paymentMethod === 'Card') {
       navigate('/checkout', { state: { orderId, amount: Math.round(total * 100) } });
     } else {
@@ -622,22 +631,27 @@ export function OrderFormPage() {
         We need your delivery location
       </h3>
       <div className="space-y-4">
-        <button
-          className="w-full py-2 bg-blue-600 text-white rounded"
-          onClick={() => {
-            setLocationSource('gps');
-          }}
-        >
-          Use current location
-        </button>
-        <button
-          className="w-full py-2 border rounded"
-          onClick={() => {
-            setLocationSource('map');
-          }}
-        >
-          Pick on map
-        </button>
+      {loadingLocation ? (
+                <div className="flex justify-center py-8">
+                  {/* Simple spinner */}
+                  <div className="animate-spin w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    className="w-full py-2 bg-blue-600 text-white rounded"
+                    onClick={() => setLocationSource('gps')}
+                  >
+                    Use current location
+                  </button>
+                  <button
+                    className="w-full py-2 border rounded"
+                    onClick={() => setLocationSource('map')}
+                  >
+                    Pick on map
+                  </button>
+                </>
+              )}
       </div>
     </div>
   </div>
