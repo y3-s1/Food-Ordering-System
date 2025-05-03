@@ -13,6 +13,7 @@ export const deliveryApi = axios.create({
 // Order Service Axios
 export const orderApi = axios.create({
   baseURL: `${API_BASE_URL}/api/orders/api/v1/orders`,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,6 +30,7 @@ export const cartApi = axios.create({
 // Restaurant Service Axios
 export const restaurantApi = axios.create({
   baseURL: `${API_BASE_URL}/api/restaurants/api/restaurants`,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

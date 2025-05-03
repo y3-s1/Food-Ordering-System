@@ -23,7 +23,7 @@ router.get('/', authMiddleware, roleGuard(['admin']), getOrders);
 // Customer and admin endpoints
 router.post('/', authMiddleware, roleGuard(['customer', 'admin']), placeOrder);
 router.get('/user/:userId', authMiddleware, roleGuard(['customer', 'admin']), getUserOrders);
-router.get('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), getOrder);
+router.get('/:orderId', authMiddleware, roleGuard(['customer', 'admin', 'deliveryAgent']), getOrder);
 router.put('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), modifyOrder);
 router.delete('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), cancelOrder);
 router.get('/:orderId/status', authMiddleware, roleGuard(['customer', 'admin']), getStatus);
@@ -34,6 +34,6 @@ router.put('/:orderId/accept', authMiddleware, roleGuard(['restaurant']), accept
 router.put('/:orderId/reject', authMiddleware, roleGuard(['restaurant']), rejectOrderController);
 
 // Delivery and restaurant
-router.put('/:orderId/status', authMiddleware, roleGuard(['restaurant', 'delivery']), updateStatusController);
+router.put('/:orderId/status', authMiddleware, roleGuard(['restaurant', 'deliveryAgent', 'customer']), updateStatusController);
 
 export default router;

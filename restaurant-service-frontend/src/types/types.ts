@@ -1,11 +1,8 @@
-export interface Restaurant {
+export type Restaurant = {
   _id: string;
   name: string;
   description: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
+  location: { lat: number; lng: number };
   address: string;
   contactNumber: string;
   email: string;
@@ -14,19 +11,15 @@ export interface Restaurant {
   isAvailable: boolean;
   imageUrl: string;
   approvalStatus: 'pending' | 'approved' | 'rejected';
-  createdAt: Date;
-  updatedAt: Date;
-}
+  ownerId: string;
+};
 
-export interface MenuItem {
+export type MenuItem = {
   _id: string;
   name: string;
   description: string;
   price: number;
   category: string;
   isAvailable: boolean;
-  imageUrl: string;
   restaurantId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+};

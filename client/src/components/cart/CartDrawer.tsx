@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import CartPage from '../../pages/cart/CartPage';

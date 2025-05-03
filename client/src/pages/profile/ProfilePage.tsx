@@ -7,7 +7,7 @@ import ProfileForm from "./ProfileForm";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { OrderFormPage } from './pages/order/OrderFormPage';
@@ -19,13 +19,16 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
-import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
+import LiveTrackingPage from './pages/delivery/LiveTrackingPage';
+import CartDrawer from './components/cart/CartDrawer';
+import { useCart } from './context/cartContext';
 
 function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const location = useLocation();
+  const { cartOpen, setCartOpen } = useCart();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
@@ -42,13 +45,15 @@ function AppContent() {
           <Route path="/order/:orderId/tracking" element={<OrderTrackingPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
-          <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
+          <Route path="/order/edit/:orderId" element={<OrderModificationPage />} />
           <Route path="/order/:orderId" element={<OrderDetailPage />} />
+          <Route path="/order/track/:orderId" element={<LiveTrackingPage />} />
           <Route
             path="/cart"
             element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
           />
-          <Route path="/cart/item" element={<FoodItemModel />} />
+          <Route path="/customer-dashboard" element={<RestaurantList/>}/>
+          <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
 
           {/* Auth Routes */}
           <Route path="/" element={<Login />} />
@@ -68,6 +73,10 @@ function AppContent() {
         {/* Show Footer only if NOT admin */}
         {!isAdminRoute && <Footer />}
       </main>
+      <CartDrawer 
+        isOpen={cartOpen} 
+        onClose={() => setCartOpen(false)} 
+      />
     </div>
   );
 }

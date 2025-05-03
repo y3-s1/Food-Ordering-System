@@ -1,4 +1,5 @@
 export interface CartItem {
+    _id: string ;
     restaurantId: string;
     menuItemId: string;
     name: string;
@@ -9,6 +10,7 @@ export interface CartItem {
   }
   
   export interface Cart {
+    _id?: string;
     items: CartItem[];
     subtotal: number;
     promotionCode?: string;

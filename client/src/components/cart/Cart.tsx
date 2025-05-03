@@ -1,5 +1,5 @@
 // src/components/cart/CartComponent.tsx
-import React, { FC, useState, useRef, useEffect } from 'react';
+import { FC, useState, useRef, useEffect } from 'react';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import CartItemComponent from './CartItem';
 import { Cart, CartItem } from '../../types/cart/cart';
@@ -87,10 +87,6 @@ const CartComponent: FC<Props> = ({ cart, onUpdateQty, onRemove, onClearCart, on
           <span>LKR {feesTotal.toFixed(2)}</span>
         </div>
         <div className="ml-4 space-y-1 text-sm text-gray-600">
-          <div className="flex justify-between">
-            <span>Delivery</span>
-            <span>LKR {(fees?.deliveryFee ?? 0).toFixed(2)}</span>
-          </div>
           <div className="flex justify-between">
             <span>Service</span>
             <span>LKR {(fees?.serviceFee ?? 0).toFixed(2)}</span>

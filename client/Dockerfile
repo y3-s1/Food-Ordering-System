@@ -1,44 +1,32 @@
-# ----------- Builder Stage -----------
-    FROM node:18-alpine AS builder
+# 1. Use Node image to build the app
+FROM node:20 AS build
 
-    # Set working directory
-    WORKDIR /app
-    
-    # Copy package manifests
-    COPY package.json package-lock.json* yarn.lock* ./
-    
-    # Install dependencies
-    # If you use npm:
-    RUN npm ci
-    # If you use yarn, replace with:
-    # RUN yarn install --frozen-lockfile
-    
-    # Copy the rest of the source code
-    COPY . .
-    
-    # Build the production assets
-    RUN npm run build
-    # or: RUN yarn build
-    
-    # ----------- Production Stage -----------
-    FROM nginx:alpine AS production
-    
-    # Remove default nginx website
-    RUN rm -rf /usr/share/nginx/html/*
-    
-    # Copy built assets from builder
-    COPY --from=builder /app/dist /usr/share/nginx/html
-    
-    # Copy custom nginx config (optional)
-    # COPY nginx.conf /etc/nginx/conf.d/default.conf
-    
-    # Expose port 80
-    EXPOSE 80
-    
-    # Healthcheck (optional)
-    HEALTHCHECK --interval=30s --timeout=3s \
-      CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
-    
-    # Start Nginx
-    CMD ["nginx", "-g", "daemon off;"]
-    
+# 2. Set working directory
+WORKDIR /app
+
+# 3. Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# 4. Install dependencies
+RUN npm install
+
+# 5. Copy rest of the application
+COPY . .
+
+# 6. Build the application
+RUN npm run build
+
+# 7. Use Nginx to serve the app
+FROM nginx:stable-alpine
+
+# 8. Copy the build output to nginx html directory
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# 9. Copy custom nginx config (optional, for SPA routing)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 10. Expose port 3000
+EXPOSE 3002
+
+# 11. Start nginx
+CMD ["nginx", "-g", "daemon off;"]

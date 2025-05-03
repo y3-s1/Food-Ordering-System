@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Restaurant } from '../../types/restaurant/restaurant';
 import RestaurantCard from './RestaurantCard';
 import { fetchApprovedRestaurants } from '../../services/resturent/restaurantService';
+import { IRestaurant } from '../../types/restaurant/restaurant';
 
 const RestaurantList: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
+  const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState<IRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
