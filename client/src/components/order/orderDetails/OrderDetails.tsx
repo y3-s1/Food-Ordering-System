@@ -7,6 +7,8 @@ import { OrderItemList } from './OrderItemList';
 import { OrderSummary } from './OrderSummary';
 import { AddressDetails } from './AddressDetails';
 import { OrderTrackingSection } from '../orderTracking/OrderTrackingSection';
+import { IRestaurant } from '../../../types/restaurant/restaurant';
+import { getRestaurantById } from '../../../services/resturent/restaurantService';
 
 export const OrderDetails: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -14,7 +16,9 @@ export const OrderDetails: React.FC = () => {
   const [order, setOrder] = useState<OrderDTO | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [restaurant, setRestaurant] = useState<IRestaurant | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const hiddenStatuses = ['Delivered', 'Cancelled', 'PaymentFail'] as const;
 
   useEffect(() => {
     if (!orderId) return;
@@ -28,6 +32,14 @@ export const OrderDetails: React.FC = () => {
     if (!order) return;
     navigate(`/order/edit/${order._id}`);
   };
+
+  useEffect(() => {
+    if (order?.restaurantId) {
+      getRestaurantById(order.restaurantId)
+        .then(res => setRestaurant(res))
+        .catch(err => console.error('Failed to load restaurant', err));
+    }
+  }, [order?.restaurantId]);
 
   const handleCancel = async () => {
     if (!orderId) return;
@@ -84,12 +96,15 @@ export const OrderDetails: React.FC = () => {
             )}
           </header>
 
-          {order.status !== 'Delivered' && (
-        <OrderTrackingSection />
-      )}
+          {order.status !== 'Delivered'
+            && order.status !== 'Cancelled'
+            && order.status !== 'PaymentFail'
+            && <OrderTrackingSection />
+          }
+
 
           {/* Items List */}
-          <OrderItemList items={order.items} />
+          <OrderItemList restaurant={restaurant} items={order.items} />
 
           {/* Summary and Address side by side on md+ */}
           <div className="grid md:grid-cols-2 gap-6">

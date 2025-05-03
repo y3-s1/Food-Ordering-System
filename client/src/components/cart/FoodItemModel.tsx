@@ -6,7 +6,7 @@ import { Minus, Plus, X } from "lucide-react"
 import type { CartItem } from "../../types/cart/cart"
 import ModalPortal from "../common/ModalPortal"
 import { Button } from "../ui/button"
-import { Textarea } from "../ui/textarea"
+// import { Textarea } from "../ui/textarea"
 import { Badge } from "../ui/badge"
 import { Separator } from "../ui/separator"
 import { cn } from "../../utils/utils"
@@ -20,7 +20,7 @@ interface FoodItemModalProps {
 
 const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, onRemove }) => {
   const [quantity, setQuantity] = useState<number>(item.quantity)
-  const [notes, setNotes] = useState<string>(item.notes || "")
+  // const [notes, setNotes] = useState<string>(item.notes || "")
 
   const basePrice = item.unitPrice
   const getTotalPrice = () => basePrice * quantity
@@ -35,7 +35,7 @@ const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, 
     onUpdate({
       ...item,
       quantity,
-      notes,
+      // notes,
       unitPrice: basePrice,
     })
     onClose()
@@ -131,7 +131,7 @@ const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, 
               </div>
 
               {/* Notes */}
-              <div className="mb-6">
+              {/* <div className="mb-6">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Special Instructions</label>
                 <Textarea
                   value={notes}
@@ -139,16 +139,16 @@ const FoodItemModal: React.FC<FoodItemModalProps> = ({ item, onClose, onUpdate, 
                   placeholder="Add a note (e.g., no onions, extra spicy)"
                   className="resize-none h-24"
                 />
-              </div>
+              </div> */}
 
               {/* Display added notes */}
-              {notes && (
+              {/* {notes && (
                 <div className="mb-6 bg-amber-50 p-3 rounded-lg border border-amber-100">
                   <p className="text-amber-800 text-sm">
                     <span className="font-semibold">Note:</span> {notes}
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div className="mt-auto">
                 <div className="flex justify-between items-center mb-4">
