@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MenuItem } from '../../types/types';
-import { createMenuItem, updateMenuItem } from '../../api/restaurantApi';
+import restaurantApi from '../../api/restaurantApi';
 
 interface MenuItemModalProps {
   restaurantId: string;
@@ -118,13 +118,15 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
       
       if (menuItem) {
         // Update existing menu item
-        const updatedItem = await updateMenuItem(restaurantId, menuItem._id, menuItemData);
+        const response = await restaurantApi.put(`/${restaurantId}/menu-items/${menuItem._id}`, menuItemData);
+        const updatedItem = response.data;
         updatedMenuItems = existingMenuItems.map(item => 
           item._id === menuItem._id ? updatedItem : item
         );
       } else {
         // Create new menu item
-        const newItem = await createMenuItem(restaurantId, menuItemData);
+        const response = await restaurantApi.post(`/${restaurantId}/menu-items`, menuItemData);
+        const newItem = response.data;
         updatedMenuItems = [...existingMenuItems, newItem];
       }
       

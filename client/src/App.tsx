@@ -22,10 +22,14 @@ import CheckoutPage from './pages/payment/CheckoutPage';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
 import LiveTrackingPage from './pages/delivery/LiveTrackingPage';
+import CartDrawer from './components/cart/CartDrawer';
+import { useCart } from './context/cartContext';
+import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 
 function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const location = useLocation();
+  const { cartOpen, setCartOpen } = useCart();
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
@@ -42,7 +46,7 @@ function AppContent() {
           <Route path="/order/:orderId/tracking" element={<OrderTrackingPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
-          <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
+          <Route path="/order/edit/:orderId" element={<OrderModificationPage />} />
           <Route path="/order/:orderId" element={<OrderDetailPage />} />
           <Route path="/order/track/:orderId" element={<LiveTrackingPage />} />
           <Route
@@ -51,6 +55,7 @@ function AppContent() {
           />
           <Route path="/customer-dashboard" element={<RestaurantList/>}/>
           <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
+          <Route path="/Restaurants/orders" element={<RestaurantOrderList/>}/>
 
           {/* Auth Routes */}
           <Route path="/" element={<Login />} />
@@ -70,6 +75,10 @@ function AppContent() {
         {/* Show Footer only if NOT admin */}
         {!isAdminRoute && <Footer />}
       </main>
+      <CartDrawer 
+        isOpen={cartOpen} 
+        onClose={() => setCartOpen(false)} 
+      />
     </div>
   );
 }

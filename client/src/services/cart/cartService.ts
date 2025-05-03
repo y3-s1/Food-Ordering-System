@@ -8,7 +8,7 @@ export const fetchCart = async (): Promise<Cart> => {
 };
 
 export const clearCart = async (): Promise<Cart> => {
-  const response = await cartApi.delete<Cart>('/items');
+  const response = await cartApi.delete<Cart>('/');
   return response.data;
 };
 
@@ -23,6 +23,11 @@ export const updateItemQuantity = async (
   quantity: number
 ): Promise<Cart> => {
   const response = await cartApi.put<Cart>(`/items/${id}`, { quantity });
+  return response.data;
+};
+
+export const updateCartItem = async (item: CartItem): Promise<Cart> => {
+  const response = await cartApi.put(`/items/${item._id}`, item);
   return response.data;
 };
 

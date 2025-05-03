@@ -19,6 +19,10 @@ const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://user-service:50
 // Protect routes - verify token and add user to request
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    const internalService = req.headers['x-internal-service'];
+  if (internalService === 'order-service') {
+    return next();
+  }
     // Get token from header or cookie
     const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
     
@@ -83,6 +87,10 @@ export const isRestaurantOwner = async (req: AuthRequest, res: Response, next: N
     
     // Here you would typically check if the restaurant belongs to the user
     // This is a simplified example - you should implement proper ownership verification
+    const internalService = req.headers['x-internal-service'];
+    if (internalService === 'order-service') {
+      return next();
+    }
     
     // For now, we'll just check if the user has the restaurantOwner role
     if (req.user?.role === 'restaurantOwner' || req.user?.isAdmin) {

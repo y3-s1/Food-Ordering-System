@@ -30,6 +30,7 @@ export const cartApi = axios.create({
 // Restaurant Service Axios
 export const restaurantApi = axios.create({
   baseURL: `${API_BASE_URL}/api/restaurants/api/restaurants`,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

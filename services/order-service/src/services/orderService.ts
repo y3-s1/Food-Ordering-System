@@ -2,6 +2,7 @@ import axios from 'axios';
 import Order, { IOrder } from '../models/Order';
 import mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
+import { notificationServiceApi, restaurantServiceApi, userServiceApi } from '../utils/serviceApi';
 
 interface CreateOrderDTO {
   customerId: string;
@@ -27,7 +28,17 @@ interface MenuItem { menuItemId: string; name: string; imageUrl: string; quantit
 
 interface ModifyOrderDTO {
   items?: { menuItemId: string; name: string; imageUrl: string; quantity: number; unitPrice: number }[];
+  deliveryAddress?: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
   notes?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
   promotionCode?: string;
 }
 
@@ -38,10 +49,10 @@ export async function createOrder(dto: CreateOrderDTO): Promise<IOrder> {
 
   try {
     // Fetch all menu items for this restaurant via our GET endpoint
-    const { data: menuData } = await axios.get<
+    const { data: menuData } = await restaurantServiceApi.get<
       { _id: string; name: string; imageUrl: string; price: number }[]
     >(
-      `${process.env.RESTAURANT_URL}/api/restaurants/${dto.restaurantId}/menu-items`,
+      `/${dto.restaurantId}/menu-items`,
       { timeout: 2000 }
     );
 
@@ -123,9 +134,11 @@ export async function modifySelectOrder(
   const order = await Order.findById(orderId);
   if (!order) throw { status: 404, message: 'Order not found' };
 
-  if (order.status !== 'PendingPayment') {
+  if (order.status !== 'PendingPayment' && order.status !== 'Confirmed') {
     throw { status: 400, message: 'Order cannot be modified at this stage' };
   }
+  
+  console.log('dto', dto)
 
   if (dto.items) {
     const enriched = dto.items.map(i => ({
@@ -142,6 +155,8 @@ export async function modifySelectOrder(
 
   if (dto.notes !== undefined)       order.notes = dto.notes;
   if (dto.promotionCode !== undefined) order.promotionCode = dto.promotionCode;
+  if (dto.deliveryAddress !== undefined) order.deliveryAddress = dto.deliveryAddress;
+  if (dto.location !== undefined) order.location = dto.location;
 
   const itemsTotal = order.items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
   const deliveryFee = order.fees.deliveryFee;  // or recalc if dynamic
@@ -190,6 +205,32 @@ export async function acceptOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Preparing';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderPreparing',
+        payload: { orderId: order.id }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -203,6 +244,32 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Cancelled';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderCancelled',
+        payload: { orderId: order.id, reason: 'Restaurant cancelled the order' }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -217,6 +284,7 @@ export async function updateOrderStatus(
 
   const allowed: Record<string, string[]> = {
     PendingPayment: ['Confirmed', 'PaymentFail'],
+    PaymentFail: ['Confirmed'],
     Confirmed:       ['Preparing'],
     Preparing:       ['OutForDelivery'],
     OutForDelivery:  ['Delivered'],
@@ -233,5 +301,60 @@ export async function updateOrderStatus(
 
   order.status = newStatus;
   await order.save();
+
+  // Determine which notification to send
+  let eventType: string;
+  const payload: any = { orderId: order.id };
+
+  switch (newStatus) {
+    case 'Confirmed':
+      eventType = 'OrderConfirmed';
+      break;
+
+    case 'OutForDelivery':
+      eventType = 'OutForDelivery';
+      payload.eta = new Date(Date.now() + 30 * 60000).toISOString();
+      break;
+
+    case 'Delivered':
+      eventType = 'Delivered';
+      payload.deliveredAt = new Date().toISOString();
+      break;
+
+    case 'PaymentFail':
+      eventType = 'OrderCancelled';
+      payload.reason = 'Payment failed';
+      break;
+
+    default:
+      return order;
+  }
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType,
+        payload
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
+
   return order;
 }

@@ -1,10 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { placeOrder } from '../../services/order/orderService';
+import { placeOrder, updateOrderStatus } from '../../services/order/orderService';
 import type { CreateOrderDTO, DeliveryOption, PaymentMethod } from '../../types/order/order';
 import { OrderDraft } from '../../types/cart/cart';
 import { getRestaurantById } from '../../services/resturent/restaurantService';
 import { useAuth } from '../../auth/AuthContext';
+import { AddressModal } from '../../components/order/address/AddressForm';
+import { MapModal } from '../../components/order/location/MapModal';
 
 interface IRestaurant {
   _id: string;
@@ -30,6 +32,11 @@ export function OrderFormPage() {
   const [isCartOpen, setIsCartOpen] = useState(true);
   const [deliveryOption, setDeliveryOption] = useState<'Standard' | 'PickUp'>('Standard');
   const [paymentMethod, setPaymentMethod] = useState<"Card" | "Cash on Delivery">("Card");
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
+  const [addressError, setAddressError] = useState(false)
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [isPickingOnMap, setIsPickingOnMap] = useState(false);
+  const [locationSource, setLocationSource] = useState<'gps'|'map'|null>(null);
   const [form, setForm] = useState<CreateOrderDTO>({
     customerId:     draft?.customerId     || '',
     customerName:   draft?.customerName   || '',
@@ -91,6 +98,36 @@ export function OrderFormPage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!locationSource) return;
+  
+    async function resolveLocationAndOrder() {
+      let coords = form.location;
+      
+      const pos = await getCurrentPosition();
+      try {
+        coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      } catch {
+        console.warn('GPS failed');
+      }
+      updateField('location', coords);
+      
+      if (locationSource === 'map') {
+        // open the map picker
+        setIsPickingOnMap(true);
+        return;
+      }
+  
+      setShowLocationPrompt(false);
+  
+      await doPlaceOrder({ ...form, location: coords });
+    }
+  
+    resolveLocationAndOrder();
+    setLocationSource(null);
+  }, [locationSource]);
+  
+
 
   const subtotal = form.items.reduce(
     (sum, itm) => sum + itm.unitPrice * itm.quantity,
@@ -100,6 +137,35 @@ export function OrderFormPage() {
   const { deliveryFee, serviceFee, tax } = form.fees ?? { deliveryFee: 0, serviceFee: 0, tax: 0 };
   const feesTotal = deliveryFee + serviceFee + tax;
   const total = subtotal - discountAmount + feesTotal;
+
+
+  function getCurrentPosition(): Promise<GeolocationPosition> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported'));
+      } else {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10_000,
+        });
+      }
+    });
+  }
+
+  async function doPlaceOrder(payload: CreateOrderDTO) {
+    const res = await placeOrder(payload);
+    const orderId = res.data._id;
+    console.log('res', res)
+    if (payload.paymentMethod === 'Card') {
+      navigate('/checkout', { state: { orderId, amount: Math.round(total * 100) } });
+    } else {
+      await updateOrderStatus(orderId, 'Confirmed');
+      
+      navigate(`/order/confirm/${orderId}`);
+    }
+  }
+  
+  
 
   function updateField<K extends keyof CreateOrderDTO>(key: K, value: CreateOrderDTO[K]) {
     setForm(f => ({ ...f, [key]: value }));
@@ -132,23 +198,36 @@ export function OrderFormPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const { street, city, postalCode, country } = form.deliveryAddress;
+  if (!street || !city || !postalCode || !country) {
+    setAddressError(true);
+    // open the editor automatically so they can fix it:
+    setIsEditingAddress(true);
+    return;
+  }
+
+  // let coords = form.location;
+  // try {
+  //   const pos = await getCurrentPosition();
+  //   coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  // } catch {
+  //   console.warn('Couldn’t grab GPS — using fallback');
+  // }
+
+  // // 2) create a payload object that merges form + coords
+  // const payload: CreateOrderDTO = {
+  //   ...form,
+  //   location: coords,
+  // };
+  const { lat, lng } = form.location;
+  if (!lat && !lng) {
+    // trigger the prompt instead of sending
+    setShowLocationPrompt(true);
+    return;
+  }
 
     // 1) place the order in your backend
-    const res = await placeOrder(form);
-    const orderId = res.data._id;
-
-    if (form.paymentMethod === 'Card') {
-      // 2a) for card, go to checkout and pass the amount (in cents/paise if needed)
-      navigate('/checkout', {
-        state: {
-          orderId,
-          amount: Math.round(total * 100), 
-        }
-      });
-    } else {
-      // 2b) for COD, go directly to confirmation
-      navigate(`/order/confirm/${orderId}`);
-    }
+    await doPlaceOrder(form); 
   }
 
 
@@ -210,26 +289,37 @@ export function OrderFormPage() {
 
         {/* Delivery Details Card */}
         <section className="bg-white rounded-2xl p-6 shadow">
-          <h2 className="text-xl font-semibold mb-4">Delivery details</h2>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2">
+          <h2 className="text-xl font-semibold mb-6">Delivery details</h2>
+          <div className="flex place-items-center justify-between mb-3">
+            <div className="flex place-items-start space-x-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7l9-4 9 4v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" /></svg>
-              <div>
+              <div className="place-items-start">
                 <p className="font-medium">{form.deliveryAddress.street || 'Select address'}</p>
-                <p className="text-sm text-gray-500">{form.deliveryAddress.city}</p>
+                <p >{form.deliveryAddress.city}</p>
               </div>
             </div>
-            <button className="text-blue-600 hover:underline">Edit</button>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               <p className="text-gray-700">{form.notes || 'Add delivery instructions'}</p>
             </div>
-            <button className="text-blue-600 hover:underline">Edit</button>
+            <button
+                onClick={() => {
+                  setAddressError(false);
+                  setIsEditingAddress(true);
+                }}
+                className="text-blue-600 hover:underline"
+              >
+                {form.deliveryAddress.street ? 'Edit' : 'Add'} address
+              </button>
           </div>
         </section>
-
+        {addressError && (
+          <p className="mt-2 text-sm text-red-600">
+            Please fill in your delivery address to continue.
+          </p>
+        )}
         {/* Delivery Options Card */}
         <section className="bg-white rounded-2xl p-6 shadow">
           <h2 className="text-xl font-semibold mb-4">Delivery options</h2>
@@ -375,12 +465,12 @@ export function OrderFormPage() {
           ) : (
             <p>Loading restaurant information…</p>
           )}
-          <button
+          {/* <button
             onClick={onSubmit}
             className="hidden lg:block w-full bg-black text-white rounded-lg py-3 text-center font-medium hover:bg-gray-800"
           >
             Continue to payment
-          </button>
+          </button> */}
         </section>
 
         {/* Cart Summary & Promotion & Total */}
@@ -524,6 +614,58 @@ export function OrderFormPage() {
       </div>
 
       </div>
+      {/* Location Prompt */}
+      {showLocationPrompt && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 className="text-lg font-semibold mb-4">
+        We need your delivery location
+      </h3>
+      <div className="space-y-4">
+        <button
+          className="w-full py-2 bg-blue-600 text-white rounded"
+          onClick={() => {
+            setLocationSource('gps');
+          }}
+        >
+          Use current location
+        </button>
+        <button
+          className="w-full py-2 border rounded"
+          onClick={() => {
+            setLocationSource('map');
+          }}
+        >
+          Pick on map
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      <AddressModal
+        isOpen={isEditingAddress}
+        address={form.deliveryAddress}
+        onChange={addr => updateField('deliveryAddress', addr)}
+        onSave={() => setIsEditingAddress(false)}
+        onCancel={() => {
+          setIsEditingAddress(false);
+          setAddressError(false);
+        }}
+      />
+      <MapModal
+  isOpen={isPickingOnMap}
+  position={form.location}
+  onChange={pos => updateField('location', pos)}
+  onClose={async () => {
+    setIsPickingOnMap(false);
+    setShowLocationPrompt(false);
+    // place with whatever they picked
+    await doPlaceOrder({ ...form, location: form.location });
+  }}
+/>
+
     </div>
   );
 }

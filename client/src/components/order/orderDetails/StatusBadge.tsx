@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type OrderStatus =
+    'PaymentFail'
   | 'PendingPayment'
   | 'Confirmed'
   | 'Preparing'
@@ -19,6 +20,7 @@ const statusStyles: Record<OrderStatus, string> = {
   OutForDelivery: 'bg-orange-100 text-orange-800',
   Delivered: 'bg-green-100 text-green-800',
   Cancelled: 'bg-red-100 text-red-800',
+  PaymentFail:  'bg-gray-100 text-gray-800',
 };
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => (

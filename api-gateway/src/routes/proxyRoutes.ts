@@ -19,6 +19,11 @@ router.use('/api/cart', createProxyMiddleware({
   changeOrigin: true,
 }));
 
+router.use('/api/notification', createProxyMiddleware({
+  target: SERVICE_URLS.notification,
+  changeOrigin: true,
+}));
+
 router.use('/api/restaurants', createProxyMiddleware({
   target: SERVICE_URLS.restaurant,
   changeOrigin: true,

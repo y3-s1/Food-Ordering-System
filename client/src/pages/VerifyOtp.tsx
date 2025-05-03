@@ -42,7 +42,7 @@ export default function VerifyOtp() {
     try {
       // You can use data.userId instead of email since it's now part of the form data
       await userApi.post("/auth/verify-otp", { email: data.userId, otp: data.otp });
-      toast.success("🎉 OTP verified. You may now login.");
+      toast.success(" OTP verified. You may now login.");
       localStorage.removeItem("pendingEmail");
       navigate("/");
     } catch (err: any) {
@@ -57,7 +57,7 @@ export default function VerifyOtp() {
 
     try {
       await userApi.post("/auth/resend-otp", { email });
-      toast.success("📨 OTP resent successfully!");
+      toast.success(" OTP resent successfully!");
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to resend OTP.");
     }

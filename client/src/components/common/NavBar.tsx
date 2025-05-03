@@ -1,15 +1,18 @@
 import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-react';
-import CartDrawer from '../cart/CartDrawer';
+// import CartDrawer from '../cart/CartDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import SidebarDrawer from './SidebarDrawer';
+import { useCart } from '../../context/cartContext';
 
 const Navbar: FC = () => {
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
-  const [isCartOpen, setCartOpen] = useState(false);
+  // const [isCartOpen, setCartOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { cart, setCartOpen } = useCart();
+  const cartItemCount = cart.items.reduce((total, item) => total + item.quantity, 0);
 
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
@@ -70,19 +73,23 @@ const Navbar: FC = () => {
             </div>
 
             {/* Cart Icon */}
-            <div className="relative cursor-pointer" onClick={handleCartClick}>
-              <ShoppingCart size={24} />
-              <span className="absolute -top-1 -right-2 bg-green-600 text-white text-xs font-bold rounded-full px-1">
-                2
-              </span>
-            </div>
+            <button 
+              onClick={handleCartClick}
+              className="relative p-2 text-gray-700 hover:text-green-600"
+            >
+              <ShoppingCart size={20} />
+              {cartItemCount > 0 && (
+                <span className="absolute top-0 right-0 px-2 py-1 text-xs text-white bg-red-500 rounded-full">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Drawers */}
       <SidebarDrawer isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <CartDrawer isOpen={isCartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 };

@@ -19,6 +19,7 @@ services:
       - delivery-service
       - order-service
       - cart-service
+      - notification-service
       - restaurant-service
       - user-service
       - payment-service
@@ -50,6 +51,16 @@ services:
       - "5005:5005"
     env_file:
       - ./services/cart-service/.env
+    depends_on:
+      - mongo
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    ports:
+      - "5007:5007"
+    env_file:
+      - ./services/notification-service/.env
     depends_on:
       - mongo
 
@@ -98,6 +109,14 @@ services:
     container_name: delivery-rider-frontend
     ports:
       - "3001:3000"
+    depends_on:
+      - api-gateway
+
+  restaurant-service-frontend:
+    build: ./restaurant-service-frontend
+    container_name: restaurant-service-frontend
+    ports:
+      - "3003:3003"
     depends_on:
       - api-gateway
 

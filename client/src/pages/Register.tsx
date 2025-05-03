@@ -32,15 +32,15 @@ export default function Register() {
     try {
       const response = await userApi.post("/auth/register", data);
       
-      // ✅ Store EMAIL not ID
+      //  Store EMAIL not ID
       if (response.data && response.data.email) {
         localStorage.setItem("pendingEmail", response.data.email);
       }
       
-      toast.success("✅ OTP sent. Please verify.");
+      toast.success(" OTP sent. Please verify.");
       navigate("/verify-otp");
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || "❌ Registration failed");
+      toast.error(err?.response?.data?.error || " Registration failed");
     } finally {
       setLoading(false);
     }

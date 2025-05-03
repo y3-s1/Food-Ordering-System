@@ -9,7 +9,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8081;
 
-app.use(cors());
+const raw = process.env.CLIENT_ORIGIN || '';
+const allowedOrigins = raw
+  .split(',')
+  .map(o => o.trim())
+  .filter(o => !!o)
+  .map(o => o.endsWith('/') ? o.slice(0, -1) : o);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET','POST','PUT','DELETE','OPTIONS', 'PATCH'],
+}));
 
 app.use(morgan('[:date[iso]] :method :url → :status'));
 
