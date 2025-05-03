@@ -92,7 +92,7 @@ export default function RestaurantRequests() {
 
       {/* Pending Requests */}
       <section className="mb-10">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4">⏳ Pending Requests</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4"> Pending Requests</h3>
         {filterRestaurants(pendingRestaurants).length === 0 ? (
           <div className="text-center text-gray-500">No pending restaurants.</div>
         ) : (
@@ -106,7 +106,7 @@ export default function RestaurantRequests() {
 
       {/* Approved Restaurants */}
       <section>
-        <h3 className="text-xl font-semibold text-gray-700 mb-4">✅ Approved Restaurants</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4"> Approved Restaurants</h3>
         {filterRestaurants(approvedRestaurants).length === 0 ? (
           <div className="text-center text-gray-500">No approved restaurants yet.</div>
         ) : (
