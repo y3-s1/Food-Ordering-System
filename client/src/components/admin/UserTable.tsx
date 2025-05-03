@@ -69,7 +69,7 @@ export default function UserTable({ users, onDelete, refresh }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      toast.success("✅ User updated successfully!");
+      toast.success(" User updated successfully!");
       setEditingUser(null);
       refresh();
     } catch (error) {

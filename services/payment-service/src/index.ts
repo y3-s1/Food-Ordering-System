@@ -1,7 +1,7 @@
 import express, { Application } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import mongoose from "mongoose"; // ✅ ADD Mongoose
+import mongoose from "mongoose"; //  ADD Mongoose
 import paymentRoutes from "./routes/paymentRoutes";
 import refundRoutes from "./routes/refundRoutes";
 import webhookRoutes from "./routes/webhookRoutes";
@@ -13,36 +13,36 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5006;
 
-// ✅ Connect MongoDB
+//  Connect MongoDB
 mongoose
   .connect(process.env.MONGO_URI!)
-  .then(() => console.log("✅ Connected to MongoDB"))
+  .then(() => console.log(" Connected to MongoDB"))
   .catch((err) => {
     console.error("MongoDB connection error:", err);
     process.exit(1);
   });
 
-// 👉 Setup CORS properly
+//  Setup CORS properly
 app.use(cors({
   origin: [process.env.FRONTEND_URL!],
   credentials: true,
 }));
 
-// 👉 Normal body parsing
+//  Normal body parsing
 app.use(express.json());
 
-// 👉 Stripe Webhook raw body parsing
+//  Stripe Webhook raw body parsing
 app.use('/api/payments/webhook', bodyParser.raw({ type: 'application/json' }));
 
-// 👉 Routes
+//  Routes
 app.use("/api/payments", paymentRoutes);
 app.use("/api/refunds", refundRoutes);
 app.use("/api", webhookRoutes);
 
-// 👉 Global error handler
+//  Global error handler
 app.use(errorHandler);
 
-// 👉 Start server
+//  Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Payment Service running at http://localhost:${PORT}`);
+  console.log(` Payment Service running at http://localhost:${PORT}`);
 });
