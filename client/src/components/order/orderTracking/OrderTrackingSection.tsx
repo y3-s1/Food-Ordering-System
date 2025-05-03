@@ -1,5 +1,5 @@
 import { JSX, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate  } from 'react-router-dom';
 import {
   CreditCard,
   CheckCircle,
@@ -39,6 +39,7 @@ export function OrderTrackingSection() {
   const { orderId } = useParams<{ orderId: string }>();
   const [status, setStatus] = useState<Status | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string>('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!orderId) return;
@@ -135,6 +136,18 @@ export function OrderTrackingSection() {
           <strong>{status}</strong>
         </p>
       )}
+
+    {status === 'OutForDelivery' && orderId && (
+      <div className="mr-0 w-39 ml-auto mt-5">
+        <button
+          onClick={() => navigate(`/order/track/${orderId}`)}
+          className="bg-red-700 hover:bg-red-800 text-white px-5 py-3 rounded-full shadow-lg transition transform hover:scale-105"
+        >
+          Live Tracking
+        </button>
+      </div>
+    )}
+
     </div>
   );
 }

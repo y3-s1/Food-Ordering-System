@@ -1,13 +1,26 @@
 import { useState } from 'react';
+import { loginRider } from '../api/auth';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login with', email, password);
-    // Call API 
+    try {
+      console.log("User email: ", email, password);
+      const response = await loginRider(email, password);
+      toast.success('Login successful');
+      // Save user info to localStorage or context
+      localStorage.setItem('rider', JSON.stringify(response.user));
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      toast.error('Invalid email or password');
+    }
   };
 
   return (

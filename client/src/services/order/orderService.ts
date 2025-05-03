@@ -1,11 +1,6 @@
-import axios from 'axios';
+
 import { CreateOrderDTO, OrderDTO } from '../../types/order/order';
 import { orderApi } from '../../api/axiosInstances';
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
-  headers: { 'Content-Type': 'application/json' },
-});
 
 export const placeOrder = (data: CreateOrderDTO) =>
   orderApi.post('/', data);
@@ -16,8 +11,8 @@ export const fetchOrderById = (orderId: string) =>
 export const fetchOrderStatus = (orderId: string) =>
   orderApi.get(`/${orderId}/status`);
 
-export const fetchOrders = async (): Promise<OrderDTO[]> => {
-  const res = await orderApi.get<OrderDTO[]>('/');
+export const fetchOrders = async (userId: string): Promise<OrderDTO[]> => {
+  const res = await orderApi.get<OrderDTO[]>(`/user/${userId}`);
   return res.data;
 };
 
@@ -26,3 +21,6 @@ export const modifyOrder = (orderId: string, data: OrderDTO) =>
 
 export const updateOrderStatus = (orderId: string, status: string) =>
   orderApi.put<OrderDTO>(`/${orderId}/status`, { status });
+
+export const cancelOrderById = (orderId: string) =>
+  orderApi.delete<{ message: string }>(`/${orderId}`);

@@ -21,6 +21,7 @@ services:
       - cart-service
       - restaurant-service
       - user-service
+      - payment-service
 
   delivery-service:
     build: ./services/delivery-service
@@ -82,21 +83,29 @@ services:
     depends_on:
       - mongo
 
-  # client:
-  #   build: ./client
-  #   container_name: client
-  #   ports:
-  #     - "3000:3000"
-  #   stdin_open: true
-  #   tty: true
-  #   depends_on:
-  #     - api-gateway
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "3002:3002"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - api-gateway
 
   delivery-rider-frontend:
     build: ./delivery-rider-frontend
     container_name: delivery-rider-frontend
     ports:
       - "3001:3000"
+    depends_on:
+      - api-gateway
+
+  restaurant-service-frontend:
+    build: ./restaurant-service-frontend
+    container_name: restaurant-service-frontend
+    ports:
+      - "3003:3003"
     depends_on:
       - api-gateway
 

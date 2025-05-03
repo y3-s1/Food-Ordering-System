@@ -4,7 +4,8 @@ import { useAuth } from "../../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/admin/Sidebar";
 import DashboardHome from "./DashboardHome";
-import RestaurantRequests from "./RestaurantRequests"; // Placeholder for now
+import RestaurantRequests from "./RestaurantRequests";
+import ProfilePage from "../profile/ProfilePage"; //  Import Profile Page
 import { Loader2 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -27,14 +28,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <Sidebar selectedTab={selectedTab} setSelectedTab={setSelectedTab} onLogout={logout} />
+      <div className="w-64 bg-white shadow-md border-r h-full fixed">
+        <Sidebar selectedTab={selectedTab} setSelectedTab={setSelectedTab} onLogout={logout} />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
+      <div className="ml-64 flex-1 overflow-y-auto h-screen p-6">
         {selectedTab === "dashboard" && <DashboardHome />}
         {selectedTab === "restaurantRequests" && <RestaurantRequests />}
+        {selectedTab === "profile" && <ProfilePage />} {/*  Add Profile Section */}
       </div>
     </div>
   );

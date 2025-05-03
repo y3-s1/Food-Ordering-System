@@ -3,6 +3,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import restaurantApi from '../api/restaurantApi';
 import FormField from '../components/shared/FormField';
+import type * as L from 'leaflet';
+
+declare global {
+  interface Window {
+    L: typeof L;
+  }
+}
 
 interface FormErrors {
   [key: string]: string;
@@ -26,29 +33,25 @@ export default function AddRestaurant() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState('');
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
   const navigate = useNavigate();
 
   // Load Leaflet scripts
   useEffect(() => {
-    // Load CSS
     const leafletCSS = document.createElement('link');
     leafletCSS.rel = 'stylesheet';
     leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     leafletCSS.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
     leafletCSS.crossOrigin = '';
     document.head.appendChild(leafletCSS);
-    
-    // Load JS
+
     const leafletScript = document.createElement('script');
     leafletScript.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     leafletScript.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
     leafletScript.crossOrigin = '';
-    document.head.appendChild(leafletScript);
     
-    // Wait for script to load
     leafletScript.onload = () => {
       initializeMap();
     };
@@ -57,7 +60,8 @@ export default function AddRestaurant() {
       setMapError('Failed to load map. Please enter coordinates manually.');
     };
     
-    // Cleanup
+    document.head.appendChild(leafletScript);
+
     return () => {
       document.head.removeChild(leafletCSS);
       document.head.removeChild(leafletScript);
@@ -68,80 +72,45 @@ export default function AddRestaurant() {
     if (!mapRef.current || !window.L) return;
     
     try {
-      // Default to a central location if no coordinates are set
       const defaultLat = 40.7128;
       const defaultLng = -74.0060;
-      
-      // Initial coordinates
       const initialLat = form.lat ? parseFloat(form.lat) : defaultLat;
       const initialLng = form.lng ? parseFloat(form.lng) : defaultLng;
-      
-      // Create map instance
+
       const map = window.L.map(mapRef.current).setView([initialLat, initialLng], 13);
-      
-      // Add tile layer (OpenStreetMap)
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
       }).addTo(map);
-      
-      // Create marker
+
       const marker = window.L.marker([initialLat, initialLng], {
         draggable: true
       }).addTo(map);
-      
-      // Store references
+
       mapInstanceRef.current = map;
       markerRef.current = marker;
-      
-      // Update coordinates when marker is dragged
+
       marker.on('dragend', () => {
         const position = marker.getLatLng();
-        const newLat = position.lat.toFixed(6);
-        const newLng = position.lng.toFixed(6);
-        
         setForm(prev => ({
           ...prev,
-          lat: newLat,
-          lng: newLng
+          lat: position.lat.toFixed(6),
+          lng: position.lng.toFixed(6)
         }));
-        
-        // Clear any existing errors for these fields
-        setErrors(prev => ({
-          ...prev,
-          lat: '',
-          lng: ''
-        }));
-        
-        // Try to get address from coordinates (reverse geocoding)
         getAddressFromCoords(position.lat, position.lng);
       });
-      
-      // Add click event to map for setting marker
-      map.on('click', (event) => {
+
+      map.on('click', (event: L.LeafletMouseEvent) => {
         const { lat, lng } = event.latlng;
         marker.setLatLng([lat, lng]);
-        
-        const newLat = lat.toFixed(6);
-        const newLng = lng.toFixed(6);
-        
         setForm(prev => ({
           ...prev,
-          lat: newLat,
-          lng: newLng
+          lat: lat.toFixed(6),
+          lng: lng.toFixed(6)
         }));
-        
-        // Clear any existing errors for these fields
-        setErrors(prev => ({
-          ...prev,
-          lat: '',
-          lng: ''
-        }));
-        
-        // Try to get address from coordinates
         getAddressFromCoords(lat, lng);
       });
-      
+
       setMapLoaded(true);
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -152,36 +121,25 @@ export default function AddRestaurant() {
   // Update marker position when lat/lng input fields change
   useEffect(() => {
     if (markerRef.current && mapInstanceRef.current && form.lat && form.lng) {
-      try {
-        const lat = parseFloat(form.lat);
-        const lng = parseFloat(form.lng);
-        
-        if (!isNaN(lat) && !isNaN(lng)) {
-          markerRef.current.setLatLng([lat, lng]);
-          mapInstanceRef.current.setView([lat, lng], mapInstanceRef.current.getZoom());
-        }
-      } catch (error) {
-        console.error('Error updating marker:', error);
+      const lat = parseFloat(form.lat);
+      const lng = parseFloat(form.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        markerRef.current.setLatLng([lat, lng]);
+        mapInstanceRef.current.setView([lat, lng], mapInstanceRef.current.getZoom());
       }
     }
   }, [form.lat, form.lng]);
 
-  // Get street address from coordinates using OpenStreetMap Nominatim API
-  const getAddressFromCoords = async (lat, lng) => {
+  const getAddressFromCoords = async (lat: number, lng: number) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
         { headers: { 'Accept-Language': 'en-US,en' } }
       );
-      
       if (!response.ok) throw new Error('Failed to fetch address');
-      
       const data = await response.json();
-      if (data && data.display_name) {
-        setForm(prev => ({
-          ...prev,
-          address: data.display_name
-        }));
+      if (data?.display_name) {
+        setForm(prev => ({ ...prev, address: data.display_name }));
       }
     } catch (error) {
       console.error('Error in reverse geocoding:', error);

@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { OrderFormPage } from './pages/order/OrderFormPage';
 import { OrderTrackingPage } from './pages/order/OrderTrackingPage';
@@ -19,49 +19,72 @@ import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StripeProvider from './stripe/StripeProvider';
 import CheckoutPage from './pages/payment/CheckoutPage';
-import RestaurantOrderList from './pages/restuarant/RestaurantOrderList';
 import RestaurantList from './components/restaurant/RestaurantList';
 import RestaurantUserDetailPage from './components/restaurant/RestaurantUserDetailPage';
+import LiveTrackingPage from './pages/delivery/LiveTrackingPage';
+import CartDrawer from './components/cart/CartDrawer';
+import { useCart } from './context/cartContext';
 
-function App() {
+function AppContent() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
+  const location = useLocation();
+  const { cartOpen, setCartOpen } = useCart();
+
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
+    <div className="flex flex-col h-screen">
+      {/* Show Navbar only if NOT admin */}
+      {!isAdminRoute && <Navbar />}
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto hide-scrollbar">
+        <Routes>
+          {/* Normal User Routes */}
+          <Route path="/order/new" element={<OrderFormPage />} />
+          <Route path="/order/:orderId/tracking" element={<OrderTrackingPage />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
+          <Route path="/order/edit/:orderId" element={<OrderModificationPage />} />
+          <Route path="/order/:orderId" element={<OrderDetailPage />} />
+          <Route path="/order/track/:orderId" element={<LiveTrackingPage />} />
+          <Route
+            path="/cart"
+            element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
+          />
+          <Route path="/customer-dashboard" element={<RestaurantList/>}/>
+          <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
+
+          {/* Auth Routes */}
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+
+          {/* Dashboard Routes */}
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+
+          {/* Admin Panel Route */}
+          <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+
+          {/* Payment Page */}
+          <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>} />
+        </Routes>
+
+        {/* Show Footer only if NOT admin */}
+        {!isAdminRoute && <Footer />}
+      </main>
+      <CartDrawer 
+        isOpen={cartOpen} 
+        onClose={() => setCartOpen(false)} 
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
     <BrowserRouter>
-      <div className="flex flex-col h-screen">
-        {/* Sticky navbar at top */}
-        <Navbar />
-
-        {/* Routes container scrolls within remaining viewport */}
-        <main className="flex-1 overflow-y-auto hide-scrollbar">
-          <Routes>
-            <Route path="/order/new" element={<OrderFormPage />} />
-            <Route path="/order/:orderId/tracking" element={<OrderTrackingPage />} />
-            <Route path="/orders" element={<OrderHistoryPage />} />
-            <Route path="/order/confirm/:orderId" element={<OrderConfirmationPage />} />
-            <Route path="/order/:orderId/edit" element={<OrderModificationPage />} />
-            <Route path="/order/:orderId" element={<OrderDetailPage />} />
-            <Route path="/restaurant/orders" element={<RestaurantOrderList />} />
-            <Route
-          path="/cart"
-          element={isDesktop ? <Navigate to="/" replace /> : <CartPage />}
-        />
-            
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify-otp" element={<VerifyOtp />} />
-            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-            <Route path="/checkout" element={<StripeProvider><CheckoutPage /></StripeProvider>}/>
-
-
-            <Route path="/customer-dashboard" element={<RestaurantList/>}/>
-            <Route path="/Restaurants/:id" element={<RestaurantUserDetailPage/>}/>
-
-          </Routes>
-        <Footer/>
-        </main>
-      </div>
+      <AppContent />
     </BrowserRouter>
   );
 }

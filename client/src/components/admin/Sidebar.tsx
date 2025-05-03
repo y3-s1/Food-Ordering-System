@@ -1,5 +1,5 @@
 // src/components/admin/Sidebar.tsx
-import { FaTachometerAlt, FaUtensils, FaSignOutAlt } from "react-icons/fa";
+import { FaTachometerAlt, FaUtensils, FaSignOutAlt, FaUser } from "react-icons/fa";
 
 type SidebarProps = {
   selectedTab: string;
@@ -12,6 +12,7 @@ export default function Sidebar({ selectedTab, setSelectedTab, onLogout }: Sideb
     <div className="h-screen bg-white shadow-lg flex flex-col p-4 w-64">
       <h1 className="text-2xl font-bold text-blue-600 mb-8">Admin Panel</h1>
 
+      {/* Dashboard */}
       <button
         onClick={() => setSelectedTab("dashboard")}
         className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-2 ${
@@ -22,6 +23,7 @@ export default function Sidebar({ selectedTab, setSelectedTab, onLogout }: Sideb
         Dashboard
       </button>
 
+      {/* Restaurant Requests */}
       <button
         onClick={() => setSelectedTab("restaurantRequests")}
         className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-2 ${
@@ -32,6 +34,18 @@ export default function Sidebar({ selectedTab, setSelectedTab, onLogout }: Sideb
         Restaurant Requests
       </button>
 
+      {/* Profile */}
+      <button
+        onClick={() => setSelectedTab("profile")}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-2 ${
+          selectedTab === "profile" ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+        }`}
+      >
+        <FaUser />
+        My Profile
+      </button>
+
+      {/* Logout */}
       <div className="mt-auto">
         <button
           onClick={onLogout}

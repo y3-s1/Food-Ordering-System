@@ -1,6 +1,7 @@
 export interface OrderItemDTO {
   menuItemId: string;
   name:       string;
+  imageUrl: string;
   quantity:   number;
   unitPrice:  number;
 }
@@ -48,7 +49,7 @@ export interface OrderDTO {
     tax:         number;
   };
   totalPrice:     number;
-  status:         'PendingPayment' | 'Confirmed' | 'Preparing' | 'OutForDelivery' | 'Delivered' | 'Cancelled';
+  status:         'PendingPayment' | 'Confirmed' | 'Preparing' | 'OutForDelivery' | 'Delivered' | 'Cancelled' | 'PaymentFail';
   deliveryOption: DeliveryOption;
   paymentMethod:  PaymentMethod;
   deliveryAddress: {

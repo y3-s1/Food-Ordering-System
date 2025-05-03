@@ -14,13 +14,18 @@ async function bootstrap() {
 
   const app = express();
   app.use(cookieParser()); 
-  app.use(
-    cors({
-      origin: 'http://localhost:5173',  
-      methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-      credentials: true                 
-    })
-  );
+  const raw = process.env.CLIENT_ORIGIN || '';
+  const allowedOrigins = raw
+    .split(',')
+    .map(o => o.trim())               
+    .filter(o => !!o)                  
+    .map(o => o.endsWith('/') ? o.slice(0, -1) : o); 
+
+  app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  }));
   app.use(express.json());
 
   app.use('/api/v1/cart', cartRoutes);

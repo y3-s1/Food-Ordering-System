@@ -20,7 +20,8 @@ const app: Application = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Frontend URL
+  // origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Frontend URL
+  origin: ['http://localhost:5173', 'http://localhost:3002' , 'http://localhost:3001', 'http://localhost:3003'], // Frontend URL
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -61,12 +62,12 @@ const PORT: number = Number(process.env.PORT) || 5004;
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   })
   .catch((err) => {
-    console.error('❌ Failed to connect to the database:', err);
+    console.error('Failed to connect to the database:', err);
     process.exit(1);
   });
 
