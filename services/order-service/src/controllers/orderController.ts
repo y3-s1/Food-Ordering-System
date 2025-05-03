@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { acceptOrder, cancelSelectOrder, createOrder, getAllOrders, getOrderById, getOrderStatus, modifySelectOrder, rejectOrder, updateOrderStatus } from '../services/orderService';
 import axios from 'axios';
+import { deliveryServiceApi } from '../utils/serviceApi';
 
 export const placeOrder = async (
   req: Request,
@@ -114,7 +115,7 @@ export const acceptOrderController = async (req: Request, res: Response, next: N
     const restaurantId = req.body.restaurantId; 
     const order = await acceptOrder(orderId, restaurantId);
 
-    await axios.post(`${process.env.DELIVERY_URL}/api/deliveries/`, {
+    await deliveryServiceApi.post(`/`, {
       orderId: order._id,
       deliveryAddress: order.deliveryAddress,
       location: order.location,
