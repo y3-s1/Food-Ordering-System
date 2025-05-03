@@ -35,7 +35,7 @@ const RestaurantOrderList: React.FC = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5002/api/v1/orders/restaurant/68121c99566459c1d0b145a0`);
+      const res = await fetch(`http://localhost:5002/api/v1/orders/restaurant/6815ac3fc85757b8d207e6c3`);
       const data: Order[] = await res.json();
       setOrders(data);
     } finally { setLoading(false); }

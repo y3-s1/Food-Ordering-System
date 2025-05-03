@@ -205,6 +205,32 @@ export async function acceptOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Preparing';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderPreparing',
+        payload: { orderId: order.id }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -218,6 +244,32 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
   }
   order.status = 'Cancelled';
   await order.save();
+
+  let userContact: { email?: string; phoneNumber?: string } = {};
+  try {
+    const { data: user } = await userServiceApi.get<{ email: string; phoneNumber: string }>(
+      `/${order.customerId}`
+    );
+    userContact = {
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch user contact:', err.message);
+  }
+  console.log('userContact', userContact)
+
+  // Fire-and-forget notification request
+  notificationServiceApi
+    .post('/', {
+        userId: order.customerId,
+        email: userContact.email,
+        phoneNumber: '+94775699653',
+        channels: ['EMAIL', 'SMS'],
+        eventType: 'OrderCancelled',
+        payload: { orderId: order.id, reason: 'Restaurant cancelled the order' }
+      })
+    .catch((err) => console.error('Notification failed:', err.message));
   return order;
 }
 
@@ -299,8 +351,8 @@ export async function updateOrderStatus(
         email: userContact.email,
         phoneNumber: '+94775699653',
         channels: ['EMAIL', 'SMS'],
-        eventType: 'OrderConfirmed',
-        payload: { orderId: order.id }
+        eventType,
+        payload
       })
     .catch((err) => console.error('Notification failed:', err.message));
 
