@@ -37,19 +37,11 @@ const Navbar: FC = () => {
               onClick={() => setSidebarOpen(true)}
             />
             {/* Delivery/Pickup Toggle */}
-            {/* <div className="hidden sm:flex bg-gray-100 rounded-full p-1">
-              {(['delivery', 'pickup'] as const).map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setMode(value)}
-                  className={`px-4 py-1 rounded-full cursor-pointer text-sm font-medium ${
-                    mode === value ? 'bg-white text-gray-900' : 'text-gray-600'
-                  }`}
-                >
-                  {value.charAt(0).toUpperCase() + value.slice(1)}
-                </button>
-              ))}
-            </div> */}
+            <div className="hidden sm:flex bg-gray-100 rounded-full p-1">
+              <button onClick={()=>{navigate('/customer-dashboard')}}>
+                FoodyGo
+              </button>
+            </div>
             {/* Location & Time */}
             {/* <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 cursor-pointer">
               <MapPin size={16} className="text-red-500" />

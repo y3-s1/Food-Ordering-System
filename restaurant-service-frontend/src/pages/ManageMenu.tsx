@@ -172,13 +172,15 @@ export default function ManageMenu() {
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <h1 className="text-white text-3xl font-bold">{restaurant.name}</h1>
             </div>
-            <button onClick={()=>{handleOrdersButtonClick(restaurant._id)}} >Orders</button>
           </div>
         )}
         
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Manage Menu</h2>
+            {restaurant && (
+              <button onClick={()=>{handleOrdersButtonClick(restaurant._id)}} >Orders</button>
+            )}
             <button
               onClick={() => navigate('/dashboard')}
               className="text-blue-600 hover:text-blue-800 flex items-center"

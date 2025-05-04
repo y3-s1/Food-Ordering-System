@@ -225,7 +225,7 @@ export async function acceptOrder(orderId: string, restaurantId: string): Promis
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94769835804',
+        phoneNumber: '+94777351503',
         channels: ['EMAIL', 'SMS'],
         eventType: 'OrderPreparing',
         payload: { orderId: order.id }
@@ -264,7 +264,7 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94769835804',
+        phoneNumber: '+94777351503',
         channels: ['EMAIL', 'SMS'],
         eventType: 'OrderCancelled',
         payload: { orderId: order.id, reason: 'Restaurant cancelled the order' }
@@ -349,7 +349,7 @@ export async function updateOrderStatus(
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94769835804',
+        phoneNumber: '+94777351503',
         channels: ['EMAIL', 'SMS'],
         eventType,
         payload
