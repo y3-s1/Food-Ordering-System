@@ -115,12 +115,18 @@ export const acceptOrderController = async (req: Request, res: Response, next: N
     const restaurantId = req.body.restaurantId; 
     const order = await acceptOrder(orderId, restaurantId);
 
-    await deliveryServiceApi.post(`/`, {
-      orderId: order._id,
-      deliveryAddress: order.deliveryAddress,
-      location: order.location,
-      restaurantId: order.restaurantId
-    });
+    if (order.deliveryOption === 'Standard') {
+      try {
+        await deliveryServiceApi.post(`/`, {
+          orderId: order._id,
+          deliveryAddress: order.deliveryAddress,
+          location: order.location,
+          restaurantId: order.restaurantId
+        });
+      } catch (err: any) {
+        console.error('Failed to create delivery:', err.message);
+      }
+    }
     
     io.emit('orderUpdated', order);
     res.json(order);
