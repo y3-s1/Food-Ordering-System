@@ -132,11 +132,31 @@ export const updateStatus: RequestHandler = async (req, res) => {
     delivery.status = status;
     await delivery.save();
 
+    // Update corresponding order status
+    let newOrderStatus: string | null = null;
+
+    if (status === 'OUT_FOR_DELIVERY') {
+      newOrderStatus = 'OutForDelivery';
+    } else if (status === 'DELIVERED') {
+      newOrderStatus = 'Delivered';
+    }
+
+    if (newOrderStatus && delivery.orderId) {
+      try {
+        await orderServiceApi.put(
+          `/${delivery.orderId}/status`,
+          { status: newOrderStatus },
+        );
+      } catch (err) {
+        console.error('Failed to update order status:', err);
+      }
+    }
+
     // If status becomes "DELIVERED", decrease driver's load
     if (status === 'DELIVERED' && delivery.driverId) {
       const driver = await DriverStatus.findOne({ userId: delivery.driverId });
       if (driver) {
-        driver.currentLoad = Math.max(0, driver.currentLoad - 1); // prevent negative load
+        driver.currentLoad = Math.max(0, driver.currentLoad - 1);
         await driver.save();
       }
     }

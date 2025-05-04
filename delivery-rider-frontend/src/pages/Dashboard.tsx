@@ -11,6 +11,7 @@ import L from 'leaflet';
 import { calculateDistance } from '../utils/geo';
 import NavigateButton from '../components/NavigateButton';
 import RiderStatusToggle from '../components/RiderStatusToggle';
+import { addHoursToDate } from '../utils/date';
 
 
 const Dashboard = () => {
@@ -59,22 +60,43 @@ const Dashboard = () => {
   const fetchData = useCallback(async () => {
     try {
       const data = await getDeliveriesByDriver(driverId);
-      setDeliveries(data);
   
-      const active = data.find((d) => d.status === 'OUT_FOR_DELIVERY');
+      // Sort deliveries by status priority and createdAt (oldest first within same status)
+      const sortedData = [...data].sort((a, b) => {
+        const statusOrder = { 
+          OUT_FOR_DELIVERY: 1, 
+          ASSIGNED: 2, 
+          DELIVERED: 3,
+          PENDING: 4
+        };
+  
+        if (statusOrder[a.status] !== statusOrder[b.status]) {
+          return statusOrder[a.status] - statusOrder[b.status];
+        }
+  
+        // Flip the comparison to show oldest first
+        return (
+          new Date(a.createdAt).getTime() - 
+          new Date(b.createdAt).getTime()
+        );
+      });
+  
+      setDeliveries(sortedData);
+  
+      const active = sortedData.find((d) => d.status === 'OUT_FOR_DELIVERY');
       if (active) {
         setActiveDelivery(active);
-        setZoomLevel(9);   // Zoom out when there is active delivery
+        setZoomLevel(9);
       } else {
         setActiveDelivery(null);
-        setZoomLevel(15);  // Normal zoom otherwise
+        setZoomLevel(15);
       }
     } catch (error) {
       console.error('Failed to fetch deliveries', error);
     } finally {
       setLoading(false);
     }
-  }, [driverId]); 
+  }, [driverId]);
 
   useEffect(() => {
     if (!driverId) return;
@@ -300,7 +322,7 @@ const Dashboard = () => {
 
             <p className="text-gray-600">📍 {delivery.deliveryAddress}</p>
             <p className="text-gray-500 mt-1 text-sm">
-              ETA: {new Date(delivery.estimatedTime).toLocaleTimeString()}
+              ETA: {addHoursToDate(delivery.createdAt, 1).toLocaleTimeString()}
             </p>
 
             <div className="mt-3 flex gap-2 transition-opacity duration-200">
