@@ -199,7 +199,7 @@ export async function getOrderStatus(orderId: string) {
 export async function acceptOrder(orderId: string, restaurantId: string): Promise<IOrder> {
   const order = await Order.findById(orderId);
   if (!order) throw { status: 404, message: 'Order not found' };
-  if (order.restaurantId !== restaurantId) throw { status: 403, message: 'Unauthorized' };
+  // if (order.restaurantId !== restaurantId) throw { status: 403, message: 'Unauthorized' };
   if (order.status !== 'Confirmed') {
     throw { status: 400, message: 'Only confirmed orders can be accepted' };
   }
@@ -225,7 +225,7 @@ export async function acceptOrder(orderId: string, restaurantId: string): Promis
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94775699653',
+        phoneNumber: '+94769835804',
         channels: ['EMAIL', 'SMS'],
         eventType: 'OrderPreparing',
         payload: { orderId: order.id }
@@ -264,7 +264,7 @@ export async function rejectOrder(orderId: string, restaurantId: string): Promis
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94775699653',
+        phoneNumber: '+94769835804',
         channels: ['EMAIL', 'SMS'],
         eventType: 'OrderCancelled',
         payload: { orderId: order.id, reason: 'Restaurant cancelled the order' }
@@ -349,7 +349,7 @@ export async function updateOrderStatus(
     .post('/', {
         userId: order.customerId,
         email: userContact.email,
-        phoneNumber: '+94775699653',
+        phoneNumber: '+94769835804',
         channels: ['EMAIL', 'SMS'],
         eventType,
         payload
