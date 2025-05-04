@@ -13,8 +13,8 @@ logs/
 *.log
 
 # === Environment Variables ===
-.env
-.env.*
+# .env
+# .env.*
 
 # === OS Specific ===
 .DS_Store
@@ -26,7 +26,7 @@ Thumbs.db
 *.swp
 
 # === Docker ===
-**/Dockerfile
+# **/Dockerfile
 docker-compose.override.yml
 
 # === Kubernetes Secrets ===

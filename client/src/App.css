@@ -1,1 +1,18 @@
-[App.css placeholder] 
+#root {
+  margin: 0 auto;
+}
+
+/* hide scrollbar for Chrome, Safari & Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* hide scrollbar for Firefox */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* hide scrollbar for IE, Edge */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+}

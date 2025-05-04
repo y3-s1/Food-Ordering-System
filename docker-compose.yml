@@ -1,0 +1,125 @@
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      - delivery-service
+      - order-service
+      - cart-service
+      - notification-service
+      - restaurant-service
+      - user-service
+      - payment-service
+
+  delivery-service:
+    build: ./services/delivery-service
+    container_name: delivery-service
+    ports:
+      - "5003:5003"
+    env_file:
+      - ./services/delivery-service/.env
+    depends_on:
+      - mongo
+
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+    ports:
+      - "5002:5002"
+    env_file:
+      - ./services/order-service/.env
+    depends_on:
+      - mongo
+
+  cart-service:
+    build: ./services/cart-service
+    container_name: cart-service
+    ports:
+      - "5005:5005"
+    env_file:
+      - ./services/cart-service/.env
+    depends_on:
+      - mongo
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    ports:
+      - "5007:5007"
+    env_file:
+      - ./services/notification-service/.env
+    depends_on:
+      - mongo
+
+  restaurant-service:
+    build: ./services/restaurant-service
+    container_name: restaurant-service
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./services/restaurant-service/.env
+    depends_on:
+      - mongo
+
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+    ports:
+      - "5004:5004"
+    env_file:
+      - ./services/user-service/.env
+    depends_on:
+      - mongo
+
+  payment-service:
+    build: ./services/payment-service
+    container_name: payment-service
+    ports:
+      - "5006:5006"
+    env_file:
+      - ./services/payment-service/.env
+    depends_on:
+      - mongo
+
+  client:
+    build: ./client
+    container_name: client
+    ports:
+      - "3002:3002"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - api-gateway
+
+  delivery-rider-frontend:
+    build: ./delivery-rider-frontend
+    container_name: delivery-rider-frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api-gateway
+
+  restaurant-service-frontend:
+    build: ./restaurant-service-frontend
+    container_name: restaurant-service-frontend
+    ports:
+      - "3003:3003"
+    depends_on:
+      - api-gateway
+
+
+volumes:
+  mongo_data:
