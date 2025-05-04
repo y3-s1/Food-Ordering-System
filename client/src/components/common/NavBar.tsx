@@ -1,13 +1,13 @@
 import { FC, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, MapPin, ChevronDown, Clock, Search, ShoppingCart } from 'lucide-react';
+import { Menu, ShoppingCart } from 'lucide-react';
 // import CartDrawer from '../cart/CartDrawer';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import SidebarDrawer from './SidebarDrawer';
 import { useCart } from '../../context/cartContext';
 
 const Navbar: FC = () => {
-  const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
+  // const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   // const [isCartOpen, setCartOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ const Navbar: FC = () => {
               onClick={() => setSidebarOpen(true)}
             />
             {/* Delivery/Pickup Toggle */}
-            <div className="hidden sm:flex bg-gray-100 rounded-full p-1">
+            {/* <div className="hidden sm:flex bg-gray-100 rounded-full p-1">
               {(['delivery', 'pickup'] as const).map((value) => (
                 <button
                   key={value}
@@ -49,28 +49,28 @@ const Navbar: FC = () => {
                   {value.charAt(0).toUpperCase() + value.slice(1)}
                 </button>
               ))}
-            </div>
+            </div> */}
             {/* Location & Time */}
-            <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 cursor-pointer">
+            {/* <div className="hidden md:flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 cursor-pointer">
               <MapPin size={16} className="text-red-500" />
               <span className="text-sm font-medium">12 Anagarika Dharmapala St.</span>
               <Clock size={16} className="text-gray-600 ml-2" />
               <span className="text-sm font-medium">Now</span>
               <ChevronDown size={16} className="text-gray-600 ml-1" />
-            </div>
+            </div> */}
           </div>
 
           {/* Right section */}
           <div className="flex items-center space-x-4">
             {/* Search */}
-            <div className="relative hidden md:block">
+            {/* <div className="relative hidden md:block">
               <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search Uber Eats"
                 className="pl-10 pr-4 py-1 border rounded-full w-64 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
-            </div>
+            </div> */}
 
             {/* Cart Icon */}
             <button 

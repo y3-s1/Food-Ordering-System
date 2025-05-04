@@ -71,7 +71,14 @@ export default function OrderHistory() {
             ))}
           </div>
 
-          <OrderList orders={filteredOrders} tabKey={selectedTab} />
+          {filteredOrders.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-lg font-medium text-gray-500">No orders found.</p>
+            </div>
+            ):(
+              <OrderList orders={filteredOrders} tabKey={selectedTab} />
+            )}
+
         </main>
       </div>
     </div>

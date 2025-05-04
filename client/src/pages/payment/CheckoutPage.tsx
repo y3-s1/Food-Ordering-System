@@ -62,7 +62,7 @@ export default function CheckoutPage() {
       await updateOrderStatus(orderId, 'PaymentFail');
   
       // 2) go back so user can retry or choose another method
-      navigate(-1);
+      navigate('/orders');
     }
     else if (result.paymentIntent?.status === "succeeded") {
       toast.success("🎉 Payment Successful!");
