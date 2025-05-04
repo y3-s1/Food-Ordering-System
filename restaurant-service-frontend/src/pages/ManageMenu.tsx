@@ -80,6 +80,10 @@ export default function ManageMenu() {
     }
   };
 
+  const handleOrdersButtonClick = (restaurantId: string)=>{
+    navigate(`/orders/${restaurantId}`);
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -168,6 +172,7 @@ export default function ManageMenu() {
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <h1 className="text-white text-3xl font-bold">{restaurant.name}</h1>
             </div>
+            <button onClick={()=>{handleOrdersButtonClick(restaurant._id)}} >Orders</button>
           </div>
         )}
         

@@ -29,11 +29,11 @@ router.delete('/:orderId', authMiddleware, roleGuard(['customer', 'admin']), can
 router.get('/:orderId/status', authMiddleware, roleGuard(['customer', 'admin']), getStatus);
 
 // Restaurant endpoints
-router.get('/restaurant/:restaurantId', authMiddleware, roleGuard(['restaurant']), getRestaurantOrders);
-router.put('/:orderId/accept', authMiddleware, roleGuard(['restaurant']), acceptOrderController);
-router.put('/:orderId/reject', authMiddleware, roleGuard(['restaurant']), rejectOrderController);
+router.get('/restaurant/:restaurantId', getRestaurantOrders);
+router.put('/:orderId/accept', acceptOrderController);
+router.put('/:orderId/reject', rejectOrderController);
 
 // Delivery and restaurant
-router.put('/:orderId/status', authMiddleware, roleGuard(['restaurant', 'deliveryAgent', 'customer']), updateStatusController);
+router.put('/:orderId/status', authMiddleware, roleGuard(['restaurantOwner', 'deliveryAgent', 'customer']), updateStatusController);
 
 export default router;
